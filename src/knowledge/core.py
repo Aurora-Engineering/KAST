@@ -17,25 +17,17 @@ class Knowledge(object):
         _type : variable
             What Python class is this knowledge an instance of?
         """
-        self.label = _label 
-        self.name = _name       
-        self.type = _type
+        self.label = _label
+        self.name = _name
+        self._type = _type
         self.value = _value
-
-    def get_value(self):
-        return(self.value)
-
-    def get_type(self):
-        return(self.type)
-    
-    def get_name(self):
-        return(self.name)
+        # When testing this function, write separate tests per *behavior* - i.e. test_label_is_set_to_label...
     
     def update(self,value):
-        if type(value) != self.type:
-            warn(f"\n\tCaution: {self.name} is being updated with new type; changing {self.type} to {type(value)}")
-        self.type = type(value)
+        if type(value) != self._type:
+            warn(f"\n\tCaution: {self.name} is being updated with new type; changing {self._type} to {type(value)}")
+        self._type = type(value)
         self.value = value
     
     def __str__(self):
-        return f"({self.name}: {self.value} {self.type} (Level: {self.label}))"
+        return f"({self.name}: {self.value} {self._type} (Level: {self.label}))"
