@@ -2,7 +2,7 @@
 from warnings import warn
 
 class Knowledge(object):
-    def __init__(self, _label: str, _name: str, _value, _type):
+    def __init__(self, _label: str, _name: str, _value=None, _type=None):
         """
         Class representing a single datapoint of knowledge.
 
@@ -24,7 +24,7 @@ class Knowledge(object):
         # When testing this function, write separate tests per *behavior* - i.e. test_label_is_set_to_label...
     
     def update(self,value):
-        if type(value) != self._type:
+        if type(value) != self._type and self._type != None:
             warn(f"\n\tCaution: {self.name} is being updated with new type; changing {self._type} to {type(value)}")
         self._type = type(value)
         self.value = value

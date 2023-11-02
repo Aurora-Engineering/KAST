@@ -4,7 +4,7 @@ class CSVParser():
     def __init__(self,filename,line_by_line=True):
         self.df = pd.read_csv(filename)
         if line_by_line:
-            self.iterator = self.df.iterrows()
+            self.iterator = self.df.itertuples()
     
     def get_df(self) -> pd.DataFrame:
         return(self.df)
@@ -27,4 +27,6 @@ class CSVParser():
             The row index of the next line and the data contained in the next line as a tuple
         """
         nextline = next(self.iterator,None)
+        if nextline != None:
+            nextline = nextline._asdict()
         return(nextline)

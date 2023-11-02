@@ -5,6 +5,7 @@ import pandas as pd
 
 from src.predicate import Predicate
 from src.knowledge.core import Knowledge
+from src.sme_inputs import comparative_operators
 from utils.parsers import CSVParser
 
 def main():
@@ -23,47 +24,67 @@ def main():
 	return 
 
 def pybullet_synthesis(filename):
+	
+	def strlist_to_list(strlist):
+		return strlist.strip('][').split(',')
+	
 	# Subprocesses need to be outsourced to other classes/files 
 	parser = CSVParser(filename)
 	next_line = parser.get_next_line()
-	home = [0,0,1]
 	
-	gen_pr_dict = {}
-	templ_pr_dict = {}
+	knowledge_dict = {}
+	pred_dict = {}
+
+	for column in next_line.keys:
+		knowledge_dict[column] = Knowledge(_label='low',_name=column) # Create a Knowledge object to be updated for each DF column
+	
 
 	### <subprocess 1> ###
-	# Generation of template predicates from SME knowledge (may not use Predicate class)
-	position_predicate_template = Predicate('droneAtHome',home)
-	templ_pr_dict['drone_at_home'] = (position_predicate_template)
+	# Generation of template predicates from SME knowledge
+	ret = {}
+	print("Follow the steps to input predicates.\nEnter STOP to finish predicate generation.")
+	while ret != None:
+		ret = comparative_operators()
+		if ret == None:
+			break
+		pred_dict.update(ret) 
+	# Now have dictionary of SME defined predicates i.e. {'droneAtHome': Predicate(pos < 1)}
+
 	### </subprocess 1> ###
 
 
-	while next_line != None:
-		# Read data from CSV (line by line)
-		line_index, line_series = next_line
+	while next_line != None: # Loop over CSV
+		# Read data from CSV (line by line); iteration done at the end so we catch the None case
 
 		### <subprocess 2> ###
-		# Knowledge Extraction/Data Fusion 
-		# Extract useful knowledge from each line
-		position = line_series['pose'].strip('][').split(',')[:3] 			# Synethesize data from SME knowledge (position is first 3 entries of pose)
-		templ_pr_dict['drone_at_home'] = (position_predicate_template)
+		# Knowledge updating
 
-		# Transform extracted data to predicates
-		position_predicate = Predicate('droneAt',position)					# Generate predicates from synthesized data
-		gen_pr_dict['drone_at_home'] = position_predicate
+		# Convert input to knowledge
+		# should the below operation live more in the parser? or in get_next_line, at least;
+		# have get_next_line return dict with preserved datatypes rather than
+		for column in next_line.keys(): # for each DF column
+			if type(next_line[column]) == str:
+				temp = strlist_to_list(next_line[column]) # need to convert lists stored as strings in csv to list (or array, or whatever)
+															# most of the time csv's wouldn't require this - if we were getting pybullet data from redis we wouldn't have to worry abt this
+			else:
+				temp = next_line[column]
+			knowledge_dict[column].update(temp) # Update Knowledge entry with new value on each loop
 		### </subprocess 2> ###
 
-		# Check generated vs templated predicates to detect which are happening
+		### <subprocess 3> ###
+		# Extract useful knowledge from each line
+		position = knowledge_dict['pose'][:3] 			# Synethesize data from SME knowledge (position is first 3 entries of pose)
+		### </subprocess 3> ###
 
-		for check in gen_pr_dict.keys():
-			# print('Gen vars are',gen_pr_dict[check].vars)
-			# print('Templ vars are', templ_pr_dict[check].vars)
-			check_bool = gen_pr_dict[check].vars == templ_pr_dict[check].vars
-			print(f'{check} is {check_bool}')
+		### <subprocess 4> ###
+		# Loop through predicates list and see which are occurring
+
+		### </subprocess 4> ###
 
 		next_line = parser.get_next_line()
-
 	return
+
+
 
 def SME_input(frame):
 	print("Please enter information to be considered in predicate formulation")
@@ -75,6 +96,14 @@ def SME_input(frame):
 		urnary_operators(frame)
 		j +=1
 	# turnary_operators()
+
+def SME_input_rev1():
+	i = 0
+	while i < 5:
+		ret = comparative_operators()
+		if ret == None:
+			break
+	
 
 # print("Please enter in all variables to be considered (in sequential order) using their index, shown above. Print STOP to end variable input list.")
 	# new_variable_index  = None
@@ -106,8 +135,8 @@ def turnary_operators():
 
 if __name__ == '__main__':
 	# main()
-	# pybullet_synthesis(filename='data/pybullet_data.csv')
-	SME_input(['Evana', 8, 'chicken', 2, 'day'])
+	pybullet_synthesis(filename='data/pybullet_data.csv')
+	# SME_input(['Evana', 8, 'chicken', 2, 'day'])
 
 
 
