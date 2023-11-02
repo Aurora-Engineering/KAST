@@ -65,6 +65,58 @@ def pybullet_synthesis(filename):
 
 	return
 
+def SME_input(frame):
+	print("Please enter information to be considered in predicate formulation")
+	for i in range(len(frame)):
+		print(str(i) + ' - ' + str(frame[i]))
+
+	j = 0
+	while j < 3:
+		urnary_operators(frame)
+		j +=1
+	# turnary_operators()
+
+# print("Please enter in all variables to be considered (in sequential order) using their index, shown above. Print STOP to end variable input list.")
+	# new_variable_index  = None
+	# all_vars = []
+
+	# while new_variable_index != 'STOP':
+	# 	new_variable_index = input("New variable index: ")
+	# 	if new_variable_index == 'STOP':
+	# 		break
+	# 	new_variable = frame[int(new_variable_index)]
+	# 	all_vars.append(new_variable)
+
+	# print(all_vars)
+
+
+def urnary_operators(frame):
+	print("Please enter in all variables to be considered for urnary operator using their index, shown above.")
+	new_variable_index = input("New variable index: ")
+	new_variable = frame[int(new_variable_index)]
+	urnary_operator = input("Please enter one of the follow operators [<,>,=]: ")
+	numerical_val = input("Please enter a numerical value: ")
+	pred_name = input("Please enter a predicate descriptor: ")
+	
+	print(pred_name + '() ')
+	print('if ' + new_variable + ' ' + urnary_operator + ' ' + str(numerical_val))
+
+def turnary_operators():
+	pass
+
 if __name__ == '__main__':
 	# main()
-	pybullet_synthesis(filename='data/pybullet_data.csv')
+	# pybullet_synthesis(filename='data/pybullet_data.csv')
+	SME_input(['Evana', 8, 'chicken', 2, 'day'])
+
+
+
+
+
+
+
+
+
+
+
+
