@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 from warnings import warn
+from typing import Callable
 
 class Knowledge(object):
-    def __init__(self, _label: str, _name: str, _value=None, _type=None):
+    def __init__(self, _label: str, _name: str, _value=None):
         """
         Class representing a single datapoint of knowledge.
 
@@ -14,20 +15,24 @@ class Knowledge(object):
             What does this knowledge represent? 
         _value : variable
             Information representing the knowledge
-        _type : variable
-            What Python class is this knowledge an instance of?
         """
         self.label = _label
         self.name = _name
-        self._type = _type
         self.value = _value
+        self._type = type(self.value)
+
         # When testing this function, write separate tests per *behavior* - i.e. test_label_is_set_to_label...
     
     def update(self,value):
-        if type(value) != self._type and self._type != None:
+        if type(value) != self._type and self._type != type(None):
             warn(f"\n\tCaution: {self.name} is being updated with new type; changing {self._type} to {type(value)}")
         self._type = type(value)
         self.value = value
+    
+    def kast(self, output_var: str ,translation_function: Callable):
+        # print(f'Transforming {self.name} (current_value: {self.value}) to {output_var} according to {translation_function.__name__}')
+        new_knowledge = Knowledge('high',output_var,translation_function(self.value))
+        return(new_knowledge)
     
     def __str__(self):
         return f"({self.name}: {self.value} {self._type} (Level: {self.label}))"
