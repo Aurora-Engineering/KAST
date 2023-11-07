@@ -5,7 +5,7 @@ import pandas as pd
 
 from src.predicate import Predicate
 from src.knowledge.core import Knowledge
-from src.sme_inputs import comparative_operators
+from src.sme_inputs import binary_operators
 from utils.parsers import CSVParser
 
 def main():
@@ -23,8 +23,9 @@ def pybullet_synthesis(filename):
 	def strlist_to_list(strlist):
 		return strlist.strip('][').split(',')
 	
-	def pose_to_pos(pose):
-		return(pose[:3])
+	def pose_to_posz(pose):
+		pose = [float(p) for p in pose]
+		return(pose[2])
 	
 	# Subprocesses need to be outsourced to other classes/files 
 	parser = CSVParser(filename)
@@ -41,7 +42,7 @@ def pybullet_synthesis(filename):
 	# Generate methods to transition low to high level data ahead of time
 	# Should probably be exported to sme_inputs; plus, this definition is ugly - need to simplify like other SME input step
 	transition_methods = []
-	transition_methods.append({'input_var':'pose','output_var':'pos','method':pose_to_pos}) # Req info: starting var, ending var, function used
+	transition_methods.append({'input_var':'pose','output_var':'posz','method':pose_to_posz}) # Req info: starting var, ending var, function used
 	for entry in transition_methods:
 		ret = {entry['output_var']: Knowledge('high',entry['output_var'])}
 		high_level_dict.update(ret)
@@ -53,7 +54,7 @@ def pybullet_synthesis(filename):
 	ret = {}
 	print("Follow the steps to input predicates.\nEnter STOP to finish predicate generation.")
 	while ret != None:
-		ret = comparative_operators()
+		ret = binary_operators()
 		if ret == None:
 			break
 		pred_dict.update(ret) 
@@ -92,11 +93,23 @@ def pybullet_synthesis(filename):
 			# if the input variable they require is present in the low level knowledge
 			# update the high level dictionary with the corresponding output from feeding the low level input var into the translation method
 		
-		print(high_level_dict['pos'])
 		### </subprocess> ###
 
 		### <subprocess> ###
 		# Loop through predicates list and see which are occurring
+		pred_bools = {}
+		for predicate in pred_dict.keys(): # for all defined predicates
+			if pred_dict[predicate].name in high_level_dict.keys(): # if the variable considered (ex. 'pos' in (pos lt 1)) is present in the high level knowledge
+				print('predicate threshold is', pred_dict[predicate].vars)
+				print('high level info is', high_level_dict[pred_dict[predicate].name].value)
+				pred_bools[predicate] = pred_dict[predicate].operator(high_level_dict[pred_dict[predicate].name].value,float(pred_dict[predicate].vars)) 
+				# Return whether the predicate is true by evaluating the operator of the predicate with the predicate threshold and the current high level value
+				# Issue: need to ensure that predicate threshold and current value are of comparable types
+
+				# clearly these attributes need renaming and a bunch of these dicts need to go, but the functionality is there
+		
+		print(pred_bools)
+
 
 		### </subprocess> ###
 

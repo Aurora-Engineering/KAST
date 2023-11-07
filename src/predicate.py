@@ -11,4 +11,4 @@ class Predicate(object):
         _vars = ''
         for v in self.vars:                
             _vars = _vars + ' ' + str(v)
-        return "(" + self.name + ' ' + self.operator + _vars + ")"
+        return "(" + self.name + ' ' + self.operator.__name__ + _vars + ")"
