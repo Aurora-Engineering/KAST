@@ -28,11 +28,6 @@ class Knowledge(object):
             warn(f"\n\tCaution: {self.name} is being updated with new type; changing {self._type} to {type(value)}")
         self._type = type(value)
         self.value = value
-    
-    def kast(self, output_var: str ,translation_function: Callable):
-        # print(f'Transforming {self.name} (current_value: {self.value}) to {output_var} according to {translation_function.__name__}')
-        new_knowledge = Knowledge('high',output_var,translation_function(self.value))
-        return(new_knowledge)
-    
+        
     def __str__(self):
         return f"({self.name}: {self.value} {self._type} (Level: {self.label}))"

@@ -5,6 +5,7 @@ import pandas as pd
 
 from src.predicate import Predicate
 from src.knowledge.core import Knowledge
+from src.spellbook import Spellbook
 from src.sme_inputs import binary_operators
 from utils.parsers import CSVParser
 
@@ -30,24 +31,24 @@ def pybullet_synthesis(filename):
 	# Subprocesses need to be outsourced to other classes/files 
 	parser = CSVParser(filename)
 	next_line = parser.get_next_line()
-	
-	low_level_dict = {}
-	high_level_dict = {}
-	pred_dict = {}
 
-	for column in next_line.keys():
-		low_level_dict[column] = Knowledge(_label='low',_name=column) # Create a Knowledge object to be updated for each DF column
-	
-	### <subprocess> ###
-	# Generate methods to transition low to high level data ahead of time
-	# Should probably be exported to sme_inputs; plus, this definition is ugly - need to simplify like other SME input step
-	transition_methods = []
-	transition_methods.append({'input_var':'pose','output_var':'posz','method':pose_to_posz}) # Req info: starting var, ending var, function used
-	for entry in transition_methods:
-		ret = {entry['output_var']: Knowledge('high',entry['output_var'])}
-		high_level_dict.update(ret)
-	### </subprocess> ###
+	pred_dict = {} # Want to potentially keep this separate from spellbook to keep PDDL as a separate 
 
+	SME_methods = [('pose','posz',pose_to_posz)] # data translation tuple of form ('input_var','output_var',translation_func)
+
+	spellbook = Spellbook(
+		low_level_headers=next_line.keys(),
+		data_translation_methods=SME_methods,
+	)
+
+	# for value in spellbook.low_level_knowledge.values():
+	# 	print(value)
+    
+	# for value in spellbook.high_level_knowledge.values():
+	# 	print(value)
+    
+	# for kaster in spellbook.kasters:
+	# 	print(kaster)
 
 	### <subprocess> ###
 	# Generation of template predicates from SME knowledge
@@ -64,45 +65,30 @@ def pybullet_synthesis(filename):
 
 
 
-	while next_line != None: # Loop over CSV
+	while next_line != None:
 		# Read data from CSV (line by line); iteration done at the end so we catch the None case
 
-		### <subprocess> ###
-		# Knowledge updating
-
-		# Convert input to knowledge
 		# should the below operation live more in the parser? or in get_next_line, at least;
-		# have get_next_line return dict with preserved datatypes rather than
+		# have get_next_line return dict with preserved datatypes? is this automatable?
+		temp = {}
 		for column in next_line.keys(): # for each DF column
 			if type(next_line[column]) == str:
-				temp = strlist_to_list(next_line[column]) # need to convert lists stored as strings in csv to list (or array, or whatever)
-															# most of the time csv's wouldn't require this - if we were getting pybullet data from redis we wouldn't have to worry abt this
+				temp[column] = strlist_to_list(next_line[column]) # need to convert lists stored as strings in csv to list (or array, or whatever)
+														  # most of the time csv's wouldn't require this - if we were getting pybullet data from redis we wouldn't have to worry abt this
 			else:
-				temp = next_line[column]
-			low_level_dict[column].update(temp) # Update Knowledge entry with new value on each loop
-		### </subprocess> ###
-
-		### <subprocess> ###
-		# Extract high level knowledge based on SME inputs - abstract out
-		for entry in transition_methods:
-			if entry['input_var'] in low_level_dict.keys():
-				high_level_dict.update({entry['output_var']: low_level_dict[entry['input_var']].kast(entry['output_var'],entry['method'])}) # This line sucks. How do we best abstract this out?
-
-			# Process occurring here: 
-			# for all the pre-defined transition methods (all the pre-defined high level data transformations)
-			# if the input variable they require is present in the low level knowledge
-			# update the high level dictionary with the corresponding output from feeding the low level input var into the translation method
+				temp[column] = next_line[column]
 		
-		### </subprocess> ###
+		spellbook.update_low_level_knowledge(temp) # Update low level knowledge using current line, whose typing is fixed by above loop
+		spellbook.kast() 					       # Use predefined kasters to generate high-level knowledge from low level knowledge
 
 		### <subprocess> ###
 		# Loop through predicates list and see which are occurring
 		pred_bools = {}
 		for predicate in pred_dict.keys(): # for all defined predicates
-			if pred_dict[predicate].name in high_level_dict.keys(): # if the variable considered (ex. 'pos' in (pos lt 1)) is present in the high level knowledge
-				print('predicate threshold is', pred_dict[predicate].vars)
-				print('high level info is', high_level_dict[pred_dict[predicate].name].value)
-				pred_bools[predicate] = pred_dict[predicate].operator(high_level_dict[pred_dict[predicate].name].value,float(pred_dict[predicate].vars)) 
+			if pred_dict[predicate].name in spellbook.high_level_knowledge.keys(): # if the variable considered (ex. 'pos' in (pos lt 1)) is present in the high level knowledge
+				# print('predicate threshold is', pred_dict[predicate].vars)
+				# print('high level info is', spellbook.high_level_knowledge[pred_dict[predicate].name].value)
+				pred_bools[predicate] = pred_dict[predicate].operator(spellbook.high_level_knowledge[pred_dict[predicate].name].value,float(pred_dict[predicate].vars)) 
 				# Return whether the predicate is true by evaluating the operator of the predicate with the predicate threshold and the current high level value
 				# Issue: need to ensure that predicate threshold and current value are of comparable types
 

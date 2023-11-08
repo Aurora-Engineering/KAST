@@ -1,4 +1,5 @@
 import pandas as pd
+from typing import Dict
 
 class CSVParser():
     def __init__(self,filename,line_by_line=True):
@@ -15,7 +16,7 @@ class CSVParser():
     def get_size(self) -> tuple:
         return(self.df.shape)       
     
-    def get_next_line(self) -> tuple[int, pd.Series]:
+    def get_next_line(self) -> Dict:
         """
         Moves to the next line in the read DataFrame and returns it with index.
         
