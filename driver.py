@@ -5,7 +5,7 @@ import pandas as pd
 
 from src.predicate import Predicate
 from src.knowledge.core import Knowledge
-from src.spellbook import Spellbook
+from src.spellbook.core import Spellbook
 from src.sme_inputs import binary_operators
 from utils.parsers import CSVParser
 
@@ -94,12 +94,13 @@ def pybullet_synthesis(filename):
 
 				# clearly these attributes need renaming and a bunch of these dicts need to go, but the functionality is there
 		
-		print(pred_bools)
+		# print(pred_bools)
 
 
 		### </subprocess> ###
-
+		# print('posz:',spellbook.high_level_knowledge['posz'].value)
 		next_line = parser.get_next_line()
+	
 	return
 
 if __name__ == '__main__':

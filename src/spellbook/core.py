@@ -4,25 +4,32 @@ import sys
 sys.path.append("..")
 
 from typing import List, Dict, Tuple, Callable
-from collections import namedtuple
 from utils.parsers import *
 
 from src.knowledge.core import Knowledge
 
-Kaster = namedtuple('Kaster',['input_vars','output_vars','method'])
+class Kaster():
+    def __init__(self,
+                 input_vars: List[str],
+                 output_vars: List[str],
+                 method: Callable
+                 ):
+        self.input_vars = input_vars
+        self.output_vars = output_vars
+        self.method = method
 
 class Spellbook():
     def __init__(self,
                  low_level_headers: List[str], 
-                 data_translation_methods: List[Tuple[str, str, callable]],
+                 data_translation_methods: List[Tuple[str, str, Callable]],
                  ) -> None:
         # Set internal vars
         
 
         # Initialize data structures
-        self.low_level_knowledge = {}
-        self.high_level_knowledge = {}
-        self.kasters = []
+        self.low_level_knowledge: Dict[str: Knowledge] = {}
+        self.high_level_knowledge: Dict[str: Knowledge] = {}
+        self.kasters: List[Kaster] = []
 
         # Initialize functionality
         # self.init_parser() - need to consider more, maybe should stay in parser
