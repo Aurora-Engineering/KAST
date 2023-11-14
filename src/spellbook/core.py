@@ -27,8 +27,8 @@ class Spellbook():
         
 
         # Initialize data structures
-        self.low_level_knowledge: Dict[str: Knowledge] = {}
-        self.high_level_knowledge: Dict[str: Knowledge] = {}
+        self.low_level_knowledge: Dict[str, Knowledge] = {}
+        self.high_level_knowledge: Dict[str, Knowledge] = {}
         self.kasters: List[Kaster] = []
 
         # Initialize functionality

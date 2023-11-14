@@ -1,7 +1,9 @@
+from typing import List
+
 from .predicate import Predicate
 import operator as op
 
-def binary_operators():
+def binary_operators_user_input():
     op_mappings = {'<': op.lt, # Create a mapping of string reps of comparison operators to functions to make these attributes evaluatable
                    '<=': op.le,
                    '==': op.eq,
