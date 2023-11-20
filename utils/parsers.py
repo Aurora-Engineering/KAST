@@ -16,7 +16,7 @@ class CSVParser():
     def get_size(self) -> tuple:
         return(self.df.shape)       
     
-    def get_next_line(self) -> Dict:
+    def get_next_mapped_line(self) -> Dict:
         """
         Moves to the next line in the read DataFrame and returns it with index.
         

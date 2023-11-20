@@ -1,7 +1,6 @@
 # Class to store knowledge (and possibly predicate) information, as well as methods to access and update that information
 import sys
 
-sys.path.append("..")
 
 from typing import List, Dict, Tuple, Callable
 from utils.parsers import *
@@ -43,13 +42,16 @@ class Spellbook():
     def init_low_level_knowledge(self, name_list: List[str]) -> None:
         # Generate low-level-knowledge objects for every item in name_list
         # (ex. one for every column in a dataframe)
+
+        # NOTE: make sure dicts being unordered doesn't break anything later on - test this!
+
         for name in name_list:
             self.low_level_knowledge[name] = Knowledge('low',name)
 
     def init_kasters(self, tuple_list: List[Tuple]) -> None:
         # Generate namedtuples of ways to go from high to low level knowledge
-        for tuple in tuple_list:
-            self.kasters.append(Kaster(tuple[0],tuple[1],tuple[2]))
+        for tuple_entry in tuple_list:
+            self.kasters.append(Kaster(tuple_entry[0],tuple_entry[1],tuple_entry[2]))
     
     def init_high_level_knowledge(self) -> None:
         # Generate high-level-knowledge objects for every output variable defined in kasters

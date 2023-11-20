@@ -4,7 +4,7 @@ import operator as op
 from warnings import warn
 
 from .core import Spellbook
-from ..predicate import Predicate
+from ..knowledge.predicate import Predicate
 
 class PDDLSpellbook(Spellbook):
     def __init__(self, 
@@ -66,13 +66,13 @@ class PDDLSpellbook(Spellbook):
         """
         Loops through internally stored predicates, comparing to current high level data to get state information
         """
-        temp = {}
+        temp_state = {} # Update name
         for predicate in self.predicates.values(): 
             if predicate.reference_variable in self.high_level_knowledge.keys():
-                temp.update(
+                temp_state.update(
                     {predicate.name: predicate.operator(self.high_level_knowledge[predicate.reference_variable].value, predicate.vars)}
                     )
             else: # Raise an error if some predicate is not being captured in high level data
                 warn(f"\n\t>>Warning! {predicate.name} cannot find {predicate.reference_variable} in high level knowledge.")
 
-        self.state: Dict[str, bool] = temp
+        self.state: Dict[str, bool] = temp_state

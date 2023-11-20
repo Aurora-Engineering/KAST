@@ -1,6 +1,6 @@
 from typing import List
 
-from .predicate import Predicate
+from .knowledge.predicate import Predicate
 import operator as op
 
 def binary_operators_user_input():
