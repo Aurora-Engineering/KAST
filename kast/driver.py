@@ -11,7 +11,7 @@ def main(filename):
 	## User Input ##
 	# Pull these out to a new file
 	SME_translation_methods = [		# data translation tuple of form ('input_var','output_var',translation_func)
-		('pose','posz',pose_to_posz)
+		(['pose'],['posz'],pose_to_posz)
 		] 
 	SME_predicate_definitions = [	# predicate definition tuple of form ('predicate name','reference variable','binary operator', numerical value), see PDDLSpellbook for more detail
 		('atHome','posz','<',[1])		# currently only supports binary comparison operators
