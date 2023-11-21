@@ -3,4 +3,6 @@ def strlist_to_list(strlist):
 
 def pose_to_posz(pose):
 	pose = [float(p) for p in pose]
-	return([pose[2]])
+	return({
+		'posz': [pose[2]]
+		})
