@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 from warnings import warn
 from typing import Callable
 
-class Knowledge(object):
+class Knowledge():
     def __init__(self, _label: str, _name: str, _value=None):
         """
         Class representing a single datapoint of knowledge.
@@ -20,8 +19,6 @@ class Knowledge(object):
         self.name = _name
         self.value = _value
         self._type = type(self.value)
-
-        # When testing this function, write separate tests per *behavior* - i.e. test_label_is_set_to_label...
     
     def update(self,value):
         if type(value) != self._type and self._type != type(None):
