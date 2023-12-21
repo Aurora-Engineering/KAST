@@ -53,7 +53,7 @@ def test_spellbook__init__creates_empty_data_structures_for_knowledge_and_kaster
     assert type(cut.high_level_knowledge) == dict
     assert type(cut.kasters) == list
 
-def test_spellbook__init__initializes_low_level_knowledge_then_kasters_and_finally_high_level_knowledge(mocker):
+def test_spellbook__init__initializes_low_level_knowledge_then_kasters_and_finally_high_level_knowledge_only_if_all_variables_required_for_kasting_exist_in_low_level_knowledge(mocker):
     
     # Arrange
     mock_manager = mocker.MagicMock()
@@ -62,6 +62,7 @@ def test_spellbook__init__initializes_low_level_knowledge_then_kasters_and_final
     fake_low_level_headers = MagicMock()
     fake_data_translation_methods = MagicMock()
 
+    # Done to ensure these runs happen in order - data MUST be run LLK->Kasters->HLK
     mock_manager.attach_mock(mocker.patch.object(cut,'init_low_level_knowledge'),'init_low_level_knowledge')
     mock_manager.attach_mock(mocker.patch.object(cut,'init_kasters'),'init_kasters')
     mock_manager.attach_mock(mocker.patch.object(cut,'init_high_level_knowledge'),'init_high_level_knowledge')
@@ -75,6 +76,7 @@ def test_spellbook__init__initializes_low_level_knowledge_then_kasters_and_final
         mocker.call.init_kasters(fake_data_translation_methods),
         mocker.call.init_high_level_knowledge()
     ], any_order=False)
+
 
 def test_spellbook_init_low_level_knowledge_creates_a_dictionary_of_knowledge_objects_with_correct_names_and_length(mocker):
     # Arrange
@@ -103,13 +105,23 @@ def test_spellbook_init_low_level_knowledge_creates_a_dictionary_of_knowledge_ob
 def test_spellbook_init_kasters_creates_a_dictionary_of_kasters_with_correct_inputs_indexed_from_tuples(mocker):
     # Arrange
     num_input_tuples = np.random.randint(0,10)
-    arg_tuple_list = []
-    for i in range(num_input_tuples):
-        arg_tuple_list.append((MagicMock(),MagicMock(),MagicMock()))
-
     cut = Spellbook.__new__(Spellbook)
-    cut.kasters = []
 
+    cut.kasters = []
+    arg_tuple_list = []
+    fake_low_level_knowledge = {}
+
+    for i in range(num_input_tuples):
+        header = MagicMock()
+
+        arg_tuple_list.append((header,
+                               MagicMock(),
+                               MagicMock()))
+
+        fake_low_level_knowledge.update({header:MagicMock()})
+
+    cut.low_level_knowledge = fake_low_level_knowledge
+    
     # Act
     cut.init_kasters(arg_tuple_list)
 
@@ -123,6 +135,47 @@ def test_spellbook_init_kasters_creates_a_dictionary_of_kasters_with_correct_inp
         assert kaster_entry.input_vars == arg_tuple_entry[0]
         assert kaster_entry.output_vars == arg_tuple_entry[1]
         assert kaster_entry.method == arg_tuple_entry[2]
+
+def test_spellbook_init_kasters_throws_an_error_if_kaster_input_variable_is_not_found_in_low_level_knowledge(mocker):
+    # Arrange
+    cut = Spellbook.__new__(Spellbook)
+    cut.low_level_knowledge = {}
+    num_kasters = np.random.randint(1,10)
+
+    arg_data_translation_methods = []
+    fake_low_level_knowledge = {}
+    fake_headers = []
+    cut.kasters = []
+
+    for i in range(num_kasters):
+        header = MagicMock()
+
+        fake_kaster_spec = (header,
+                            None,
+                            None
+        )
+
+        fake_headers.append(header)
+        fake_low_level_knowledge.update({header: MagicMock()})
+        arg_data_translation_methods.append(fake_kaster_spec)
+
+    cut.low_level_knowledge = fake_low_level_knowledge
+
+    excluded_kaster_spec = MagicMock()
+    excluded_kaster_spec = ('this_is_not_in_the_low_level_knowledge',
+                            None,
+                            None
+    )
+    arg_data_translation_methods.append(excluded_kaster_spec)
+
+
+    # Act
+    with pytest.raises(KeyError) as e_info:
+        cut.init_kasters(arg_data_translation_methods)
+
+    # Assert
+    assert f'Kaster input variable {excluded_kaster_spec[0]} was not found in the available low level knowledge.' in e_info.exconly()
+
 
 def test_spellbook_init_high_level_knowledge_creates_a_list_of_high_level_knowledge_objects_with_one_for_every_kaster_using_kaster_output_variables_as_labels(mocker):
 
@@ -279,79 +332,6 @@ def test_kast_kaster_specified_high_level_knowledge_is_updated_with_output_of_ka
 
         assert cut.high_level_knowledge[fake_output_vars[i]].update.call_count == 1
         assert cut.high_level_knowledge[fake_output_vars[i]].update.call_args_list[0].args == (forced_returns[i],)
-
-def test_kast_does_not_update_high_level_knowledge_according_to_kaster_method_if_kaster_input_variable_is_not_present_in_low_level_knowledge(mocker):
-    # Arrange
-    num_kasters = np.random.randint(1,10)
-    fake_kasters = []
-    fake_input_knowledges = []
-    fake_input_values = []
-    fake_output_vars = []
-    fake_methods = []
-
-    forced_returns = []
-
-    fake_low_level_knowledge = {}
-    fake_high_level_knowledge = {}
-
-    for i in range(num_kasters):
-
-        fake_input_name = MagicMock()
-
-        fake_input_value = MagicMock()
-        fake_input_values.append(fake_input_value)
-
-        fake_input_knowledge = MagicMock()
-        fake_input_knowledge.value = fake_input_value
-        fake_input_knowledges.append(fake_input_knowledge)
-
-        fake_output_name = MagicMock()
-        fake_output_vars.append(fake_output_name)
-
-        fake_method = MagicMock()
-        fake_methods.append(fake_method)
-
-        forced_return_output_value = MagicMock()
-        forced_returns.append(forced_return_output_value)
-
-        fake_knowledge_object = MagicMock()
-        fake_low_level_knowledge[fake_input_name] = fake_input_knowledge
-        fake_high_level_knowledge[fake_output_name] = fake_knowledge_object
-
-        fake_kaster = MagicMock()
-        fake_kaster.input_vars = fake_input_name
-        fake_kaster.output_vars = fake_output_name
-
-        mocker.patch.object(fake_kaster,'method',return_value=forced_return_output_value)
-        mocker.patch.object(fake_knowledge_object,'update')
-
-        fake_kasters.append(fake_kaster)
-
-    excluded_kaster = Kaster.__new__(Kaster)
-
-    excluded_kaster.input_vars = MagicMock()
-    excluded_kaster.output_vars = MagicMock()
-    excluded_kaster.method = MagicMock()
-
-    mocker.patch.object(excluded_kaster,'method',return_value=MagicMock())
-
-    fake_kasters.append(excluded_kaster)
-        
-    cut = Spellbook.__new__(Spellbook)
-
-    cut.low_level_knowledge = fake_low_level_knowledge
-    cut.high_level_knowledge = fake_high_level_knowledge
-    cut.kasters = fake_kasters 
-
-    # Act
-
-    cut.kast()
-
-    # Assert
-    for i in range(num_kasters):
-        assert fake_kasters[i].method.call_count == 1
-        
-    assert excluded_kaster.method.call_count == 0
 
 def test_kast_does_nothing_if_no_kasters_are_present(mocker):
     # Arrange
