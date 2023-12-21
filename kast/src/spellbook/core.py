@@ -69,19 +69,18 @@ class Spellbook():
     def kast(self):
         # Use kasters to update high-level-knowledge, so long as the required input variables exist in the low-level-knowledge
         for kaster in self.kasters:
-            if kaster.input_vars in self.low_level_knowledge.keys():
-                # This is a doozy.
-                # Set the high-level Knowledge item specified by the kaster output variable 
-                # to the result of the translation function specified in the kaster method field
-                # by calling that function using the value of the low-level Knowledge item specified by the kaster input variable
-                # There's probably a ... cleaner way to do this
+            # This is a doozy.
+            # Set the high-level Knowledge item specified by the kaster output variable 
+            # to the result of the translation function specified in the kaster method field
+            # by calling that function using the value of the low-level Knowledge item specified by the kaster input variable
+            # There's probably a ... cleaner way to do this
 
-                input_variable_name = kaster.input_vars
-                output_variable_name = kaster.output_vars
+            input_variable_name = kaster.input_vars
+            output_variable_name = kaster.output_vars
 
-                input_value = self.low_level_knowledge[input_variable_name].value
-                
-                returned_knowledge = kaster.method(input_value)
+            input_value = self.low_level_knowledge[input_variable_name].value
+            
+            returned_knowledge = kaster.method(input_value)
 
-                self.high_level_knowledge[output_variable_name].update(returned_knowledge)
-                # self.high_level_knowledge[kaster.output_vars].update(kaster.method(self.low_level_knowledge[kaster.input_vars].value))
+            self.high_level_knowledge[output_variable_name].update(returned_knowledge)
+            # self.high_level_knowledge[kaster.output_vars].update(kaster.method(self.low_level_knowledge[kaster.input_vars].value))
