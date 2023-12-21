@@ -7,14 +7,6 @@ from utils.pybullet_util import strlist_to_list, pose_to_posz
 SIM_ENVIRONMENT = "pybullet"
 DATA_TYPE = "PDDL"
 
-# NOTE:
-# Main issues:
-# - Take in multiple args for translation methods
-# - Take in more complex comparators for predicate definitions
-# - Create external location for hard-codings (config file)
-# - Rename variables and 
-
-
 def main(filename):
 	## User Input ##
 	# Pull these out to a new file
@@ -61,7 +53,7 @@ def main(filename):
 	return
 
 if __name__ == '__main__':
-	main(filename='data/pybullet_data.csv')
+	main(filename='kast/data/pybullet_data.csv')
 
 
 

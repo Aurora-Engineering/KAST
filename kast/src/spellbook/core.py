@@ -3,9 +3,8 @@ import sys
 
 
 from typing import List, Dict, Tuple, Callable
-from utils.parsers import *
 
-from src.knowledge.core import Knowledge
+from ..knowledge.core import Knowledge
 
 class Kaster():
     def __init__(self,
@@ -16,14 +15,13 @@ class Kaster():
         self.input_vars = input_vars
         self.output_vars = output_vars
         self.method = method
-
+ 
 class Spellbook():
     def __init__(self,
                  low_level_headers: List[str], 
                  data_translation_methods: List[Tuple[str, str, Callable]],
                  ) -> None:
-        # Set internal vars
-        
+        # Set internal vars - PLACEHOLDER
 
         # Initialize data structures
         self.low_level_knowledge: Dict[str, Knowledge] = {}
@@ -43,8 +41,6 @@ class Spellbook():
         # Generate low-level-knowledge objects for every item in name_list
         # (ex. one for every column in a dataframe)
 
-        # NOTE: make sure dicts being unordered doesn't break anything later on - test this!
-
         for name in name_list:
             self.low_level_knowledge[name] = Knowledge('low',name)
 
@@ -61,6 +57,8 @@ class Spellbook():
     def update_low_level_knowledge(self,new_frame: Dict) -> None:
         # Update low-level-knowledge with new frame of data
         for name in new_frame.keys():
+            if name not in self.low_level_knowledge.keys(): # If presented with an unseen piece of knowledge, create a new low-level representation
+                self.low_level_knowledge[name] = Knowledge('low',name,new_frame[name])
             self.low_level_knowledge[name].update(new_frame[name])
 
     def kast(self):
@@ -72,4 +70,13 @@ class Spellbook():
                 # to the result of the translation function specified in the kaster method field
                 # by calling that function using the value of the low-level Knowledge item specified by the kaster input variable
                 # There's probably a ... cleaner way to do this
-                self.high_level_knowledge[kaster.output_vars].update(kaster.method(self.low_level_knowledge[kaster.input_vars].value))
+
+                input_variable_name = kaster.input_vars
+                output_variable_name = kaster.output_vars
+
+                input_value = self.low_level_knowledge[input_variable_name].value
+                
+                returned_knowledge = kaster.method(input_value)
+
+                self.high_level_knowledge[output_variable_name].update(returned_knowledge)
+                # self.high_level_knowledge[kaster.output_vars].update(kaster.method(self.low_level_knowledge[kaster.input_vars].value))
