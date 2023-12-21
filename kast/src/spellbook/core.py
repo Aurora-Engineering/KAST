@@ -46,8 +46,13 @@ class Spellbook():
 
     def init_kasters(self, tuple_list: List[Tuple]) -> None:
         # Generate namedtuples of ways to go from high to low level knowledge
+        available_low_level_knowledge = self.low_level_knowledge.keys()
         for tuple_entry in tuple_list:
-            self.kasters.append(Kaster(tuple_entry[0],tuple_entry[1],tuple_entry[2]))
+            required_input = tuple_entry[0]
+            if required_input in available_low_level_knowledge:
+                self.kasters.append(Kaster(tuple_entry[0],tuple_entry[1],tuple_entry[2]))
+            else:
+                raise KeyError(f'Kaster input variable {required_input} was not found in the available low level knowledge.')
     
     def init_high_level_knowledge(self) -> None:
         # Generate high-level-knowledge objects for every output variable defined in kasters
