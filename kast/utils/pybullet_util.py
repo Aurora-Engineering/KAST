@@ -1,8 +1,9 @@
 def strlist_to_list(strlist):
 	return strlist.strip('][').split(',')
 
-def pose_to_posz(pose):
+def pose_to_posxy(pose):
 	pose = [float(p) for p in pose]
 	return({
-		'posz': [pose[2]]
+		'posx': pose[0],
+		'posy': pose[1]
 		})
