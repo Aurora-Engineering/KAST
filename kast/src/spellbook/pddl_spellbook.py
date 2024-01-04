@@ -44,14 +44,16 @@ class PDDLSpellbook(Spellbook):
         Loops through internally stored predicates, comparing to current high level data to get state information
         """
         temp_state = {} # Update name
-        for predicate in self.predicates.values(): 
-            if predicate.reference_variable in self.high_level_knowledge.keys():
-                reference_var_current_value = self.high_level_knowledge[predicate.reference_variable].value
-                predicate_expectation = predicate.vars
-                temp_state.update(
-                    {predicate.name: predicate.operator(reference_var_current_value, predicate_expectation)}
-                    )
-            else: # Raise an error if some predicate is not being captured in high level data
-                warn(f"\n\t>>Warning! {predicate.name} cannot find {predicate.reference_variable} in high level knowledge.")
+        for predicate in self.predicates.values():
+            predicate_episodic_results = []
+            for i, ref_var in enumerate(predicate.reference_variable):
+                if ref_var in self.high_level_knowledge.keys():
+                    ref_var_current_value = self.high_level_knowledge[predicate.reference_variable[i]].value
+                    predicate_expectation = predicate.vars[i]
+                    predicate_episodic_results.append(predicate.operator[i](ref_var_current_value,predicate_expectation)) # Store the results of each comparison
+                else: # Raise an error if some predicate is not being captured in high level data
+                    warn(f"\n\t>>Warning! {predicate.name} cannot find {ref_var} in high level knowledge.")
+            predicate_result = all(predicate_episodic_results) if len(predicate_episodic_results) > 0 else False
+            temp_state.update({predicate.name: predicate_result})
 
         self.state: Dict[str, bool] = temp_state

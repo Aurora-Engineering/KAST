@@ -1,8 +1,8 @@
 # Knowledge Aquisition and Synthesis Tool
 
-from src.spellbook.pddl_spellbook import PDDLSpellbook
-from utils.parsers import CSVParser
-from utils.pybullet_util import strlist_to_list, pose_to_posz
+from kast.src.spellbook.pddl_spellbook import PDDLSpellbook
+from kast.utils.parsers import CSVParser
+from kast.utils.pybullet_util import strlist_to_list, pose_to_posxy
 
 SIM_ENVIRONMENT = "pybullet"
 DATA_TYPE = "PDDL"
@@ -10,11 +10,11 @@ DATA_TYPE = "PDDL"
 def main(filename):
 	## User Input ##
 	# Pull these out to a new file
-	SME_translation_methods = [		# data translation tuple of form ('input_var','output_var',translation_func)
-		('pose','posz',pose_to_posz)
+	SME_translation_methods = [		# data translation/kaster tuple of form ('input_var','output_var',translation_func)
+		(['pose'],['posx','posy'],pose_to_posxy)
 		] 
 	SME_predicate_definitions = [	# predicate definition tuple of form ('predicate name','reference variable','binary operator', numerical value), see PDDLSpellbook for more detail
-		('atHome','posz','<',[1])		# currently only supports binary comparison operators
+		('atHome',['posx','posy'],['<','<'],[1,1])		# currently only supports binary comparison operators
 	]
 
 	## Setup 

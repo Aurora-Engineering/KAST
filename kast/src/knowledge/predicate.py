@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod # Should eventually make this an abstract superclass
+from typing import List
 import operator as op
 
 OPERATOR_MAPPINGS = {'<': op.lt, # Create a mapping of string reps of comparison operators to functions to make these attributes evaluatable
@@ -8,13 +9,16 @@ OPERATOR_MAPPINGS = {'<': op.lt, # Create a mapping of string reps of comparison
                     '>': op.gt,
                     '>=': op.lt}
 
-def get_binary_op_mappings(operator_string: str):
-    try:
-        op_functional = OPERATOR_MAPPINGS[operator_string]
-    except KeyError as e:
-        raise KeyError(f'Given operator {operator_string} is not contained in the binary operator mappings list. Check syntax.')
-    else:
-        return(op_functional)
+def get_binary_op_mappings(operator_list: List[str]):
+    ret_list = []
+    for operator_str in operator_list:
+        try:
+            op_functional = OPERATOR_MAPPINGS[operator_str]
+        except KeyError as e:
+            raise KeyError(f'Given operator {operator_str} is not contained in the binary operator mappings list. Check syntax.')
+        else:
+            ret_list.append(op_functional)
+    return ret_list
 
 class Predicate(object):
     def __init__(self, _name, _reference_variable, _operator, _vars):
