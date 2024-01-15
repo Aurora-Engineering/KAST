@@ -39,6 +39,17 @@ def test_kaster__init__sets_self_method_to_given_method():
     # Assert
     assert cut.method == arg_method
 
+pass
+# Test init_SME_knowledge
+# Must: 
+# init config parser reading given config filename
+# pd.read_csv on given kaster definitions file
+# extract list of i/o variables from stringlist of same
+# produce kaster definition tuples from multi-string representations
+# import callable modules from kaster methods
+
+
+
 def test_spellbook__init__creates_empty_data_structures_for_knowledge_and_kasters():
     # Arrange
     cut = Spellbook.__new__(Spellbook)

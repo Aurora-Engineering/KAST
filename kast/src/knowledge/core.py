@@ -26,5 +26,8 @@ class Knowledge():
         self._type = type(value)
         self.value = value
         
+    def __repr__(self):
+        return(f'Knowledge(value={self.value})')
+    
     def __str__(self):
         return f"({self.name}: {self.value} {self._type} (Level: {self.label}))"
