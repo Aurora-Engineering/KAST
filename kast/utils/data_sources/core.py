@@ -2,7 +2,6 @@ from typing import Dict
 
 class DataSource():
     def __init__(self):
-        self.index = 0
         # Initialize data source (read csv, subscribe to Redis channels, etc)
         raise NotImplementedError
 

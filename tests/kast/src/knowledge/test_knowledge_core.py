@@ -132,6 +132,6 @@ def test_knowledge_core__str__method_properly_returns_all_representative_info(mo
     # Act
     ret = cut.__str__()
     # Assert
-    assert ret == f'({cut.name}: {cut.value} {cut._type} (Level: {cut.label}))'
+    assert ret == f"({cut.name}: {cut.value} {cut._type})"
 
 

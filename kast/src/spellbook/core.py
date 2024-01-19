@@ -1,7 +1,6 @@
 # Class to store knowledge (and possibly predicate) information, as well as methods to access and update that information
 from typing import List, Dict, Tuple, Callable
 
-from kast.utils.parsers import *
 from kast.src.knowledge.core import Knowledge
 
 class Kaster():

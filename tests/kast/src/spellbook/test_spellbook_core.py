@@ -287,9 +287,10 @@ def test_spellbook_update_low_level_knowledge_creates_new_knowledge_object_if_un
 
 
 def test_kast_kaster_specified_high_level_knowledge_is_updated_with_output_of_kaster_method_called_using_kaster_specified_input_vars(mocker):
+    # This test fails randomly on the length check for Low Level Knowledge. Every so often it will generate one less dictionary object than normal.
+    # It's not a specific number combination that causes it. The low level knowledge update() is called the correct amount of times, and a unique fake_input_name key is generated each time.
+    # It currently only fails less than 1/1000. Maybe I've fixed it. But you can never be totally sure...
     # Arrange
-
-
     num_kasters = np.random.randint(1,10) # Number of fake Kasters
     num_input = np.random.randint(1,10) # Number of fake Kaster input variables
     num_output = np.random.randint(1,10) # Number of fake Kaster output variables
@@ -307,13 +308,13 @@ def test_kast_kaster_specified_high_level_knowledge_is_updated_with_output_of_ka
         fake_input_dict = {} # Fake labeled input dicts - kast() should create this so we need to store it to compare to.
 
         for i in range(num_input):
-            fake_input_name = str(MagicMock())
-            fake_kaster_inputs.append(fake_input_name)
+            fake_input_name = MagicMock()
+            fake_kaster_inputs.append(str(fake_input_name))
 
             fake_input_knowledge = MagicMock()
             fake_input_knowledge.value = MagicMock()
-            fake_low_level_knowledge.update({fake_input_name: fake_input_knowledge})
-            fake_input_dict.update({fake_input_name: fake_input_knowledge.value})
+            fake_low_level_knowledge.update({str(fake_input_name): fake_input_knowledge})
+            fake_input_dict.update({str(fake_input_name): fake_input_knowledge.value})
         
         fake_input_dict_list.append(fake_input_dict)
         

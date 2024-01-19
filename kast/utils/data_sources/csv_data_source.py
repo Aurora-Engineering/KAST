@@ -6,8 +6,9 @@ from kast.utils.data_sources.core import DataSource
 
 class CSVDataSource(DataSource):
     def __init__(self,runtime: KastRuntime):
+        self.runtime = runtime
         self.data = np.array(list(
-            csv.reader(open(runtime.data_file_path, 'r'))
+            csv.reader(open(self.runtime.data_file_path, 'r'))
             ))
         
         self.headers = self.data[0]
