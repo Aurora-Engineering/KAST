@@ -291,9 +291,9 @@ def test_kast_kaster_specified_high_level_knowledge_is_updated_with_output_of_ka
     # It's not a specific number combination that causes it. The low level knowledge update() is called the correct amount of times, and a unique fake_input_name key is generated each time.
     # It currently only fails less than 1/1000. Maybe I've fixed it. But you can never be totally sure...
     # Arrange
-    num_kasters = 4#pytest.gen.randint(1,10) # Number of fake Kasters
-    num_input = 5#pytest.gen.randint(1,10) # Number of fake Kaster input variables
-    num_output = 6#pytest.gen.randint(1,10) # Number of fake Kaster output variables
+    num_kasters = pytest.gen.randint(1,10) # Number of fake Kasters
+    num_input = pytest.gen.randint(1,10) # Number of fake Kaster input variables
+    num_output = pytest.gen.randint(1,10) # Number of fake Kaster output variables
 
     fake_kasters = [] # Fake Spellbook.Kasters
     fake_input_dict_list = [] # Fake Kaster.method() arguments; kast() creates these to unpack as adaptive-length function arguments
