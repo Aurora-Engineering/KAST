@@ -1,0 +1,10 @@
+name: kast
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python >= 3.11
+  - mock
+  - numpy
+  - pandas
+  - pytest
