@@ -12,7 +12,8 @@ class CSVDataSource(DataSource):
             ))
         
         self.headers = self.data[0]
-        self.index = 1 # Set index to access second row on first call; first row stored as headers 
+        self.data = self.data[1:]
+        self.index = 0 # Set index to access second row on first call; first row stored as headers 
 
     def get_new_information(self):
         new_frame = self.data[self.index]

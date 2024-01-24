@@ -3,7 +3,7 @@ from mock import MagicMock
 import importlib.util
 import os
 
-from kast.utils.functions import import_module
+from kast.utils.functions import import_module, get_attribute_by_name
 
 def test_import_module_throws_an_assertion_error_if_given_filepath_does_not_exist(mocker):
     # Arrange
@@ -62,3 +62,17 @@ def test_import_module_runs_correct_series_of_importlib_functions(mocker):
     assert importlib.util.module_from_spec.call_args_list[0].args == (fake_spec, )
     assert fake_spec.loader.exec_module.call_count == 1
     assert fake_spec.loader.exec_module.call_args_list[0].args == (fake_module, )
+
+def test_get_attribute_by_name_calls_getattr(mocker):
+    # Arrange
+    fake_name = MagicMock()
+    fake_module = MagicMock()
+    fake_getattr = MagicMock()
+
+    mocker.patch('kast.utils.functions.getattr',fake_getattr)
+
+    # Act
+    get_attribute_by_name(fake_module,fake_name)
+
+    # Assert
+    assert fake_getattr.call_count == 1

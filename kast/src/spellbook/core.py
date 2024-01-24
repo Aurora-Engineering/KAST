@@ -15,8 +15,8 @@ class Kaster():
  
 class Spellbook():
     def __init__(self,
-                 low_level_headers: List[str], 
-                 data_translation_methods: List[Tuple[str, str, Callable]],
+                 low_level_knowledge_headers: List[str], 
+                 kaster_definition_tuples: List[Tuple[str, str, Callable]],
                  ) -> None:
 
         # Initialize data structures
@@ -26,8 +26,8 @@ class Spellbook():
 
         # Initialize functionality
         # self.init_parser() - need to consider more, maybe should stay in parser
-        self.init_low_level_knowledge(low_level_headers)
-        self.init_kasters(data_translation_methods)
+        self.init_low_level_knowledge(low_level_knowledge_headers)
+        self.init_kasters(kaster_definition_tuples)
         self.init_high_level_knowledge()
 
     def init_low_level_knowledge(self, name_list: List[str]) -> None:

@@ -40,7 +40,7 @@ def test_csv_data_source__init__sets_data_to_numpy_array_result_of_csv_reader_th
     assert np.array.call_count == 1
     assert np.array.call_args_list[0].args == (list(fake_reader_return), )
     assert cut.headers == np.array(list(fake_reader_return))[0]
-    assert cut.index == 1
+    assert cut.index == 0
 
 def test_csv_data_source_get_new_information_queries_internal_data_by_index_then_zips_with_headers_and_returns_new_information_dict(mocker):
     # Arrange

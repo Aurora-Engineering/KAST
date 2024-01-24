@@ -6,11 +6,66 @@ import os
 import configparser
 import numpy as np
 import pandas as pd
-import importlib.util
 
 import kast
 from kast.src.runtime.core import *
 from kast.src.spellbook.core import Spellbook
+
+
+def test_print_spellbook_knowledge_prints_high_level_knowledge_only_when_io_arg_passed_as_high(mocker, capsys):
+    # Arrange
+    fake_data_source = MagicMock()
+    fake_high_level_knowledge_value = MagicMock()
+
+    cut = KastRuntime.__new__(KastRuntime)
+    cut.data_source = fake_data_source
+    cut.spellbook = MagicMock()
+    cut.spellbook.high_level_knowledge = {MagicMock(): fake_high_level_knowledge_value}
+
+    # Act
+    print_spellbook_knowledge(cut,io='high')
+    out, _ = capsys.readouterr()
+
+    # Assert
+    assert str(fake_high_level_knowledge_value) in out
+
+
+def test_print_spellbook_knowledge_prints_low_level_knowledge_only_when_io_arg_passed_as_low(mocker, capsys):
+    # Arrange
+    fake_data_source = MagicMock()
+    fake_low_level_knowledge_value = MagicMock()
+
+    cut = KastRuntime.__new__(KastRuntime)
+    cut.data_source = fake_data_source
+    cut.spellbook = MagicMock()
+    cut.spellbook.low_level_knowledge = {MagicMock(): fake_low_level_knowledge_value}
+
+    # Act
+    print_spellbook_knowledge(cut,io='low')
+    out, _ = capsys.readouterr()
+
+    # Assert
+    assert str(fake_low_level_knowledge_value) in out
+
+def test_print_spellbook_knowledge_prints_both_high_and_low_level_knowledge_only_when_io_arg_passed_as_both(mocker, capsys):
+    # Arrange
+    fake_data_source = MagicMock()
+    fake_low_level_knowledge_value = MagicMock()
+    fake_high_level_knowledge_value = MagicMock()
+
+    cut = KastRuntime.__new__(KastRuntime)
+    cut.data_source = fake_data_source
+    cut.spellbook = MagicMock()
+    cut.spellbook.low_level_knowledge = {MagicMock(): fake_low_level_knowledge_value}
+    cut.spellbook.high_level_knowledge = {MagicMock(): fake_high_level_knowledge_value}
+
+    # Act
+    print_spellbook_knowledge(cut,io='both')
+    out, _ = capsys.readouterr()
+
+    # Assert
+    assert str(fake_high_level_knowledge_value) in out
+    assert str(fake_low_level_knowledge_value) in out
 
 def test_runtime_core__init__sets_internal_filepath_to_given_arg_filepath(mocker):
     # Arrange
@@ -342,6 +397,55 @@ def test_runtime_core_run_step_calls_correct_sequence_of_spellbook_methods_after
     assert cut.spellbook.update_low_level_knowledge.call_args_list[0].args == (fake_override, )
     assert cut.spellbook.kast.call_count == 1
 
+
+def test_runtime_core_runstep_prints_step_number_on_each_loop_and_calls_print_spellbook_knowledge(mocker, capsys):
+    # Arrange
+    step_num = pytest.gen.randint(1,10)
+    fake_data_source = MagicMock()
+
+    cut = KastRuntime.__new__(KastRuntime)
+    cut.spellbook = MagicMock()
+    cut.data_source = fake_data_source
+    cut.data_source.index = step_num
+
+    mocker.patch('kast.src.runtime.core.print_spellbook_knowledge')
+
+    # Act
+    cut.run_step(io='both')
+    out, _ = capsys.readouterr()
+
+    # Assert
+    assert kast.src.runtime.core.print_spellbook_knowledge.call_count == 1
+    assert f"STEP {step_num}" in out
+
+def test_runtime_core_execute_returned_generator_returns_iterable_of_expected_form(mocker):
+    # Arrange
+    num_steps = pytest.gen.randint(1,10)
+    fake_spellbooks = []
+    fake_has_more_returns = []
+
+    for i in range(num_steps):
+        fake_spellbooks.append(MagicMock())
+        if i == num_steps-1:
+            fake_has_more_returns.append(False)
+        else:
+            fake_has_more_returns.append(True)
+
+    cut = KastRuntime.__new__(KastRuntime)
+    cut.spellbook = fake_spellbooks
+    cut.data_source = MagicMock()
+    
+    mocker.patch.object(cut.data_source, 'has_more', side_effect=fake_has_more_returns)
+    mocker.patch.object(cut, 'run_step', side_effect=fake_spellbooks)
+
+    # Act
+    yielded_spellbooks = cut.execute()
+
+
+    # Assert
+    for i, spellbook in enumerate(yielded_spellbooks):
+        assert spellbook == fake_spellbooks[i]
+
 def test_runtime_core_execute_prints_end_of_run_message_when_data_source_has_more_is_false(mocker,capsys):
     # Arrange
     cut = KastRuntime.__new__(KastRuntime)
@@ -349,10 +453,13 @@ def test_runtime_core_execute_prints_end_of_run_message_when_data_source_has_mor
     cut.data_source.has_more = MagicMock(return_value=False)
 
     # Act
-    cut.execute()
-    out, _ = capsys.readouterr()
+    yielded_spellbook = cut.execute()
 
     # Assert
+    for spellbook in yielded_spellbook:
+        pass # Required to loop through runtime with generator methodology in runtime.execute
+    out, _ = capsys.readouterr()
+    assert cut.data_source.has_more.call_count == 1
     assert 'RUN COMPLETE' in out
 
 def test_runtime_core_execute_calls_run_step_while_data_source_has_more_is_true(mocker):
@@ -375,112 +482,12 @@ def test_runtime_core_execute_calls_run_step_while_data_source_has_more_is_true(
     mocker.patch.object(cut,'run_step')
 
     # Act
-    cut.execute()
+    yielded_spellbook = cut.execute()
 
     # Assert
+    for spellbook in yielded_spellbook:
+        pass # Required to loop through the list using generator methodology
     assert cut.data_source.has_more.call_count == num_steps
     assert cut.run_step.call_count == num_steps - 1
 
-def test_runtime_core_execute_prints_step_number_on_each_loop(mocker, capsys):
-    # Arrange
-    num_steps = pytest.gen.randint(1,10)
-    has_more_returns = []
 
-    fake_data_source = MagicMock()
-    
-    for i in range(num_steps):
-        if i == num_steps - 1:
-            has_more_returns.append(False)
-        else:
-            has_more_returns.append(True)
-  
-    cut = KastRuntime.__new__(KastRuntime)
-    cut.data_source = fake_data_source
-
-    mocker.patch.object(fake_data_source, 'has_more', side_effect=has_more_returns)
-    mocker.patch.object(cut,'run_step')
-
-    # Act
-    cut.execute()
-    out, _ = capsys.readouterr()
-
-    # Assert
-    assert cut.data_source.has_more.call_count == num_steps
-    assert cut.run_step.call_count == num_steps - 1
-    assert out.count('STEP') == num_steps - 1
-
-def test_runtime_core_execute_prints_high_level_knowledge_only_when_io_arg_passed_as_high(mocker, capsys):
-    # Arrange
-    has_more_returns = [True, False]
-
-    fake_data_source = MagicMock()
-    fake_high_level_knowledge_value = MagicMock()
-
-    cut = KastRuntime.__new__(KastRuntime)
-    cut.data_source = fake_data_source
-    cut.spellbook = MagicMock()
-    cut.spellbook.high_level_knowledge = {MagicMock(): fake_high_level_knowledge_value}
-
-    mocker.patch.object(fake_data_source, 'has_more', side_effect=has_more_returns)
-    mocker.patch.object(cut,'run_step')
-
-    # Act
-    cut.execute(io='high')
-    out, _ = capsys.readouterr()
-    print(out)
-
-    # Assert
-    assert cut.run_step.call_count == 1
-    assert str(fake_high_level_knowledge_value) in out
-
-
-def test_runtime_core_execute_prints_low_level_knowledge_only_when_io_arg_passed_as_low(mocker, capsys):
-    # Arrange
-    has_more_returns = [True, False]
-
-    fake_data_source = MagicMock()
-    fake_low_level_knowledge_value = MagicMock()
-
-    cut = KastRuntime.__new__(KastRuntime)
-    cut.data_source = fake_data_source
-    cut.spellbook = MagicMock()
-    cut.spellbook.low_level_knowledge = {MagicMock(): fake_low_level_knowledge_value}
-
-    mocker.patch.object(fake_data_source, 'has_more', side_effect=has_more_returns)
-    mocker.patch.object(cut,'run_step')
-
-    # Act
-    cut.execute(io='low')
-    out, _ = capsys.readouterr()
-    print(out)
-
-    # Assert
-    assert cut.run_step.call_count == 1
-    assert str(fake_low_level_knowledge_value) in out
-
-def test_runtime_core_execute_prints_both_high_and_low_level_knowledge_only_when_io_arg_passed_as_both(mocker, capsys):
-    # Arrange
-    has_more_returns = [True, False]
-
-    fake_data_source = MagicMock()
-    fake_low_level_knowledge_value = MagicMock()
-    fake_high_level_knowledge_value = MagicMock()
-
-    cut = KastRuntime.__new__(KastRuntime)
-    cut.data_source = fake_data_source
-    cut.spellbook = MagicMock()
-    cut.spellbook.low_level_knowledge = {MagicMock(): fake_low_level_knowledge_value}
-    cut.spellbook.high_level_knowledge = {MagicMock(): fake_high_level_knowledge_value}
-
-    mocker.patch.object(fake_data_source, 'has_more', side_effect=has_more_returns)
-    mocker.patch.object(cut,'run_step')
-
-    # Act
-    cut.execute(io='both')
-    out, _ = capsys.readouterr()
-    print(out)
-
-    # Assert
-    assert cut.run_step.call_count == 1
-    assert str(fake_high_level_knowledge_value) in out
-    assert str(fake_low_level_knowledge_value) in out

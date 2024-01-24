@@ -7,11 +7,22 @@ from kast.src.spellbook.core import Spellbook
 from kast.utils.data_sources.core import DataSource
 from kast.utils.functions import get_attribute_by_name, import_module
 
+def print_spellbook_knowledge(runtime,io):
+    match io:
+        case 'high':
+            print([str(knowledge) for knowledge in runtime.spellbook.high_level_knowledge.values()])
+        case 'low':
+            print([str(knowledge) for knowledge in runtime.spellbook.low_level_knowledge.values()])
+        case 'both':
+            print([str(knowledge) for knowledge in runtime.spellbook.low_level_knowledge.values()])
+            print([str(knowledge) for knowledge in runtime.spellbook.high_level_knowledge.values()])
+
+
+
 class KastRuntime():
     def __init__(self, config_filepath: str):
         self._config_filepath = config_filepath
         assert os.path.exists(self._config_filepath), f'Specified config filepath {self._config_filepath} cannot be found.'
-
 
         self.parse_config()
         self.import_kaster_methods()
@@ -49,32 +60,26 @@ class KastRuntime():
     def initialize_data_source(self):
         module = import_module(module_name='data_source',file_to_import=f'kast/utils/data_sources/{self.data_type}_data_source.py')
         class_reference = get_attribute_by_name(module,f'{self.data_type.upper()}DataSource')
-        self.data_source: DataSource = class_reference(self)        
+        self.data_source: DataSource = class_reference(self)
 
-    def run_step(self, override=None):
+    def run_step(self, override=None, io=False):
         if override == None:
             low_level_information = self.data_source.get_new_information()
         else:
             low_level_information = override
+            self.data_source.index += 1
                 
         self.spellbook.update_low_level_knowledge(low_level_information)
         self.spellbook.kast()
-
-    def execute(self, io=None):
-        while self.data_source.has_more():
+        if io:
             print(f'------------------------------- STEP {self.data_source.index} -------------------------------')
+            print_spellbook_knowledge(self,io)
+        return(self.spellbook)
 
-            self.run_step()
-            if io:
-                match io:
-                    case 'high':
-                        print([str(knowledge) for knowledge in self.spellbook.high_level_knowledge.values()])
-                    case 'low':
-                        print([str(knowledge) for knowledge in self.spellbook.low_level_knowledge.values()])
-                    case 'both':
-                        print([str(knowledge) for knowledge in self.spellbook.low_level_knowledge.values()])
-                        print([str(knowledge) for knowledge in self.spellbook.high_level_knowledge.values()])
-
+    def execute(self, io=False):
+        while self.data_source.has_more():
+            self.spellbook = self.run_step(io=io)
+            yield self.spellbook
         print('----------------------------------------------------------------------------')
         print('------------------------------- RUN COMPLETE -------------------------------')
         print('----------------------------------------------------------------------------')
