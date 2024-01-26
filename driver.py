@@ -3,9 +3,9 @@ from kast.src.runtime.core import KastRuntime
 
 
 def main():
-	runtime = KastRuntime('kast/config/pybullet_config.ini')
+	runtime = KastRuntime('kast/config/example_config.ini')
 	for spellbook in runtime.execute(io='high'):
-		for _, knowledge_object in spellbook.high_level_knowledge.items():
+		for knowledge_object_name, knowledge_object in spellbook.high_level_knowledge.items():
 			print(f'{knowledge_object}')
 
 def manual_override():
