@@ -1,11 +1,7 @@
 # Class to store knowledge (and possibly predicate) information, as well as methods to access and update that information
-import sys
-
-
 from typing import List, Dict, Tuple, Callable
-from kast.utils.parsers import *
 
-from kast.src.knowledge.core import Knowledge
+from kast.src.knowledge import Knowledge
 
 class Kaster():
     def __init__(self,
@@ -19,10 +15,9 @@ class Kaster():
  
 class Spellbook():
     def __init__(self,
-                 low_level_headers: List[str], 
-                 data_translation_methods: List[Tuple[str, str, Callable]],
+                 low_level_knowledge_headers: List[str], 
+                 kaster_definition_tuples: List[Tuple[str, str, Callable]],
                  ) -> None:
-        # Set internal vars - PLACEHOLDER
 
         # Initialize data structures
         self.low_level_knowledge: Dict[str, Knowledge] = {}
@@ -31,12 +26,9 @@ class Spellbook():
 
         # Initialize functionality
         # self.init_parser() - need to consider more, maybe should stay in parser
-        self.init_low_level_knowledge(low_level_headers)
-        self.init_kasters(data_translation_methods)
+        self.init_low_level_knowledge(low_level_knowledge_headers)
+        self.init_kasters(kaster_definition_tuples)
         self.init_high_level_knowledge()
-
-    def init_parser(self) -> None:
-        raise NotImplementedError
 
     def init_low_level_knowledge(self, name_list: List[str]) -> None:
         # Generate low-level-knowledge objects for every item in name_list
@@ -67,12 +59,12 @@ class Spellbook():
                 self.low_level_knowledge[name] = Knowledge('low',name,new_frame[name])
             self.low_level_knowledge[name].update(new_frame[name])
 
-    def kast(self):
-            for kaster in self.kasters:
-                # Create dictionary of {'input_var_name': value from low_level_knowledge}
-                input_variables = dict([(variable, self.low_level_knowledge[variable].value) for variable in kaster.input_vars])
-                returned_knowledge = kaster.method(**input_variables) # Unpack above dictionary as kwargs for kasting method
-                # Assuming that returned values will be a dictionary of {'output_var': value}
-                # Can we mandate a function return a dictionary of output variables? Will need to standardize somehow; is there a generalized method for handling this beyond the dictionary?
-                for output_variable_name in returned_knowledge.keys():
-                    self.high_level_knowledge[output_variable_name].update(returned_knowledge[output_variable_name]) # Update high_level_knowedge entries with corresponding return values
+    def kast(self) -> None:
+        for kaster in self.kasters:
+            # Create dictionary of {'input_var_name': value from low_level_knowledge}
+            input_variables = dict([(variable, self.low_level_knowledge[variable].value) for variable in kaster.input_vars])
+            returned_knowledge = kaster.method(**input_variables) # Unpack above dictionary as kwargs for kasting method
+            # Assuming that returned variables will be ordered as defined in kaster definitions
+            for output_variable_index, output_variable_value in enumerate(returned_knowledge):
+                output_variable_name = kaster.output_vars[output_variable_index]
+                self.high_level_knowledge[output_variable_name].update(output_variable_value) # Update high_level_knowedge entries with corresponding return values

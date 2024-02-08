@@ -25,6 +25,6 @@ class Knowledge():
             warn(f"\n\tCaution: {self.name} is being updated with new type; changing {self._type} to {type(value)}")
         self._type = type(value)
         self.value = value
-        
+    
     def __str__(self):
-        return f"({self.name}: {self.value} {self._type} (Level: {self.label}))"
+        return f"({self.name}: {self.value})"

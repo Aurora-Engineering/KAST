@@ -1,68 +1,40 @@
 # Knowledge Aquisition and Synthesis Tool
+from kast.src.kast_runtime import KastRuntime
+from kast.utils.print_io import *
+import argparse
 
-from kast.src.spellbook.pddl_spellbook import PDDLSpellbook
-from kast.utils.parsers import CSVParser
-from kast.utils.pybullet_util import strlist_to_list, pose_to_posxy
 
-SIM_ENVIRONMENT = "pybullet"
-DATA_TYPE = "PDDL"
+def main():
+	arg_parser = argparse.ArgumentParser(description='')
+	arg_parser.add_argument('--demo', '-d', action='store_true',
+						 help='Run the demo data')
+	arg_parser.add_argument('--live', '-l', action='store_true',
+						 help='Run a demo using user input live data')
 
-def main(filename):
-	## User Input ##
-	# Pull these out to a new file
-	SME_translation_methods = [		# data translation/kaster tuple of form ('input_var','output_var',translation_func)
-		(['pose'],['posx','posy'],pose_to_posxy)
-		] 
-	SME_predicate_definitions = [	# predicate definition tuple of form ('predicate name','reference variable','binary operator', numerical value), see PDDLSpellbook for more detail
-		('atHome',['posx','posy'],['<','<'],[1,1])		# currently only supports binary comparison operators
-	]
+	args = arg_parser.parse_args()
 
-	## Setup 
-
-	parser = CSVParser(filename)
-	next_line = parser.get_next_mapped_line()
-
-	spellbook = PDDLSpellbook(
-		low_level_headers=next_line.keys(),
-		data_translation_methods=SME_translation_methods,
-		predicate_definitions=SME_predicate_definitions
-	)
-
-	## Active Operation
-
-	while next_line != None:
-		# Read data from CSV (line by line); iteration done at the end so we catch the None case
-
-		# should the below operation live more in the parser? or in get_next_line, at least;
-		# have get_next_line return dict with preserved datatypes? is this automatable?
-		temp_low_level_state = {}
-		for column in next_line.keys(): # for each DF column / consider using a single .keys() call
-			if type(next_line[column]) == str:
-				temp_low_level_state[column] = strlist_to_list(next_line[column]) # need to convert lists stored as strings in csv to list (or array, or whatever)
-														  		  				  # most of the time csv's wouldn't require this - if we were getting pybullet data from redis we wouldn't have to worry abt this
+	if args.demo:
+		runtime = KastRuntime('kast/config/example_config.ini')
+		for yielded_spellbook in runtime.execute(io='both'):
+			# Access new values on each step through the yielded spellbook
+			# For example, to extract the value of the high level Knowledge object 'posx'
+			# posx = yielded_spellbook.high_level_knowledge['posx'].value
+			pass
+		quit()
+	
+	if args.live:
+		runtime = KastRuntime('kast/config/live_demo_config.ini')
+		print_kast_header()
+		while True:
+			pose_input = input('Enter a Python-format list of three numbers (ex. [1,1,1]) to use as the pose variable. Enter STOP to exit.\n>>')
+			if pose_input == 'STOP':
+				print_kast_ender()
+				break
 			else:
-				temp_low_level_state[column] = next_line[column]
-		
-		spellbook.update_low_level_knowledge(temp_low_level_state) # Update low level knowledge using current line, whose typing is fixed by above loop
-		spellbook.kast() 					       # Use predefined kasters to generate high-level knowledge from low level knowledge
-		spellbook.evaluate_predicates()
-		print(f'state is {spellbook.state}')
-
-		next_line = parser.get_next_mapped_line()
-
-	return
+				yielded_spellbook = runtime.run_step({'pose': pose_input,'pose1':'[2,2,2]','pose2':'[3,3,3]'},io='both')
+				# Access new values on each step through the yielded spellbook
+				# For example, to extract the value of the high level Knowledge object 'posx'
+				# posx = yielded_spellbook.high_level_knowledge['posx'].value
 
 if __name__ == '__main__':
-	main(filename='kast/data/pybullet_data.csv')
-
-
-
-
-
-
-
-
-
-
-
-
+	main()

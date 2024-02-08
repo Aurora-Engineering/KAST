@@ -3,7 +3,7 @@ from mock import MagicMock
 import numpy as np
 import warnings
 
-from kast.src.knowledge.core import Knowledge
+from kast.src.knowledge import Knowledge
 
 def test_knowledge_core__init__sets_self_label_to_given_label(mocker):
     
@@ -121,17 +121,15 @@ def test_knowledge_core__str__method_properly_returns_all_representative_info(mo
     fake_name = MagicMock()
     fake_label = MagicMock()
     fake_value = MagicMock()
-    fake__type = MagicMock()
     
     cut = Knowledge.__new__(Knowledge)
     cut.name = fake_name
     cut.label = fake_label
     cut.value = fake_value
-    cut._type = fake__type
 
     # Act
     ret = cut.__str__()
     # Assert
-    assert ret == f'({cut.name}: {cut.value} {cut._type} (Level: {cut.label}))'
+    assert ret == f"({cut.name}: {cut.value})"
 
 
