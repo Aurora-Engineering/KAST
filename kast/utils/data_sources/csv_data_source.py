@@ -1,10 +1,10 @@
 import csv
 import numpy as np
 
-from kast.src.runtime.core import KastRuntime
+from kast.src.kast_runtime import KastRuntime
 from kast.utils.data_sources.core import DataSource
 
-class CSVDataSource(DataSource):
+class CsvDataSource(DataSource):
     def __init__(self,runtime: KastRuntime):
         self.runtime = runtime
         self.data = np.array(list(

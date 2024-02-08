@@ -3,21 +3,10 @@ import pandas as pd
 import os
 from typing import List,Tuple, Callable
 
-from kast.src.spellbook.core import Spellbook
+from kast.src.spellbook import Spellbook
 from kast.utils.data_sources.core import DataSource
 from kast.utils.functions import get_attribute_by_name, import_module
-
-def print_spellbook_knowledge(runtime,io):
-    match io:
-        case 'high':
-            print([str(knowledge) for knowledge in runtime.spellbook.high_level_knowledge.values()])
-        case 'low':
-            print([str(knowledge) for knowledge in runtime.spellbook.low_level_knowledge.values()])
-        case 'both':
-            print([str(knowledge) for knowledge in runtime.spellbook.low_level_knowledge.values()])
-            print([str(knowledge) for knowledge in runtime.spellbook.high_level_knowledge.values()])
-
-
+from kast.utils.print_io import *
 
 class KastRuntime():
     def __init__(self, config_filepath: str):
@@ -59,8 +48,8 @@ class KastRuntime():
     
     def initialize_data_source(self):
         module = import_module(module_name='data_source',file_to_import=f'kast/utils/data_sources/{self.data_type}_data_source.py')
-        class_reference = get_attribute_by_name(module,f'{self.data_type.upper()}DataSource')
-        self.data_source: DataSource = class_reference(self)
+        class_reference = get_attribute_by_name(module,f'{self.data_type.title()}DataSource')
+        self.data_source = class_reference(self)
 
     def run_step(self, override=None, io=False):
         if override == None:
@@ -71,15 +60,16 @@ class KastRuntime():
                 
         self.spellbook.update_low_level_knowledge(low_level_information)
         self.spellbook.kast()
+        
         if io:
-            print(f'------------------------------- STEP {self.data_source.index} -------------------------------')
+            print_data_source_step(self.data_source.index)
             print_spellbook_knowledge(self,io)
+
         return(self.spellbook)
 
     def execute(self, io=False):
+        print_kast_header()
         while self.data_source.has_more():
             self.spellbook = self.run_step(io=io)
             yield self.spellbook
-        print('----------------------------------------------------------------------------')
-        print('------------------------------- RUN COMPLETE -------------------------------')
-        print('----------------------------------------------------------------------------')
+        print_kast_ender()

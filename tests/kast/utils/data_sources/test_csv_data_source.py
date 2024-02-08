@@ -3,11 +3,11 @@ from mock import MagicMock
 
 import numpy as np
 
-from kast.utils.data_sources.csv_data_source import CSVDataSource
+from kast.utils.data_sources.csv_data_source import CsvDataSource
 
 def test_csv_data_source__init__sets_runtime_to_given_runtime(mocker):
     # Arrange
-    cut = CSVDataSource.__new__(CSVDataSource)
+    cut = CsvDataSource.__new__(CsvDataSource)
     fake_runtime = MagicMock()
 
     mocker.patch('csv.reader', side_effect=Exception('short-circuit red mage'))
@@ -22,7 +22,7 @@ def test_csv_data_source__init__sets_runtime_to_given_runtime(mocker):
 
 def test_csv_data_source__init__sets_data_to_numpy_array_result_of_csv_reader_then_retrieves_headers_and_finally_sets_index_to_1(mocker):
     # Arrange
-    cut = CSVDataSource.__new__(CSVDataSource)
+    cut = CsvDataSource.__new__(CsvDataSource)
     fake_runtime = MagicMock()
     fake_open_return = MagicMock()
     fake_reader_return = [MagicMock()]
@@ -53,7 +53,7 @@ def test_csv_data_source_get_new_information_queries_internal_data_by_index_then
 
     fake_headers = MagicMock()
 
-    cut = CSVDataSource.__new__(CSVDataSource)
+    cut = CsvDataSource.__new__(CsvDataSource)
     cut.index = fake_index
     cut.data = fake_internal_data
     cut.headers = fake_headers
@@ -73,7 +73,7 @@ def test_csv_data_source_get_new_information_increments_index(mocker):
 
     fake_index = pytest.gen.randint(0,num_fake_internal_data-1)
 
-    cut = CSVDataSource.__new__(CSVDataSource)
+    cut = CsvDataSource.__new__(CsvDataSource)
     cut.index = fake_index
     cut.data = fake_internal_data
     cut.headers = MagicMock()
@@ -92,7 +92,7 @@ def test_csv_data_source_has_more_returns_true_when_index_is_less_than_length_of
 
     mocker.patch('kast.utils.data_sources.csv_data_source.len', return_value=fake_length)
 
-    cut = CSVDataSource.__new__(CSVDataSource)
+    cut = CsvDataSource.__new__(CsvDataSource)
     cut.data = fake_data
     cut.index = index
 
@@ -110,7 +110,7 @@ def test_csv_data_source_has_more_returns_false_when_index_is_greater_than_lengt
 
     mocker.patch('kast.utils.data_sources.csv_data_source.len', return_value=fake_length)
 
-    cut = CSVDataSource.__new__(CSVDataSource)
+    cut = CsvDataSource.__new__(CsvDataSource)
     cut.data = fake_data
     cut.index = index
 
@@ -128,7 +128,7 @@ def test_csv_data_source_has_more_returns_false_when_index_is_equal_to_length_of
 
     mocker.patch('kast.utils.data_sources.csv_data_source.len', return_value=fake_length)
 
-    cut = CSVDataSource.__new__(CSVDataSource)
+    cut = CsvDataSource.__new__(CsvDataSource)
     cut.data = fake_data
     cut.index = index
 

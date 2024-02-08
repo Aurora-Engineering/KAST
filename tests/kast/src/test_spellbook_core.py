@@ -2,8 +2,8 @@ import pytest
 from mock import MagicMock
 import numpy as np
 
-from kast.src.spellbook.core import Spellbook, Kaster
-from kast.src.knowledge.core import *
+from kast.src.spellbook import Spellbook, Kaster
+from kast.src.knowledge import *
 
 
 def test_kaster__init__sets_self_input_vars_to_given_input_vars():
@@ -185,7 +185,6 @@ def test_spellbook_init_kasters_throws_an_error_if_kaster_input_variable_is_not_
         cut.init_kasters(arg_data_translation_methods)
 
     # Assert
-    # print(f'kasters are {cut.kasters}')
     assert len(cut.kasters) == num_kasters
     assert f'Kaster input variable {excluded_kaster_spec[0]} was not found in the available low level knowledge.' in e_info.exconly()
 
@@ -289,7 +288,6 @@ def test_spellbook_update_low_level_knowledge_creates_new_knowledge_object_if_un
 def test_kast_kaster_specified_high_level_knowledge_is_updated_with_output_of_kaster_method_called_using_kaster_specified_input_vars(mocker):
     # This test fails randomly on the length check for Low Level Knowledge. Every so often it will generate one less dictionary object than normal.
     # It's not a specific number combination that causes it. The low level knowledge update() is called the correct amount of times, and a unique fake_input_name key is generated each time.
-    # It currently only fails less than 1/1000. Maybe I've fixed it. But you can never be totally sure...
     # Arrange
     num_kasters = pytest.gen.randint(1,10) # Number of fake Kasters
     num_input = pytest.gen.randint(1,10) # Number of fake Kaster input variables
@@ -297,7 +295,7 @@ def test_kast_kaster_specified_high_level_knowledge_is_updated_with_output_of_ka
 
     fake_kasters = [] # Fake Spellbook.Kasters
     fake_input_dict_list = [] # Fake Kaster.method() arguments; kast() creates these to unpack as adaptive-length function arguments
-    forced_return_dict_list = [] # Fake Kaster.method() return values
+    forced_return_tuple_list = [] # Fake Kaster.method() return values
     all_input_vars = [] # Overall list of input variables for comparison
     all_output_vars = [] # Overall list of output variables for comparison
 
@@ -322,30 +320,29 @@ def test_kast_kaster_specified_high_level_knowledge_is_updated_with_output_of_ka
         fake_input_dict_list.append(fake_input_dict)
         
         fake_kaster_outputs = [] # Fake Kaster output NAMES
-        forced_returns_dict = {} # Fake returned values from kaster.method
+        temp_forced_return_list = []
 
         for i in range(num_output):
             fake_output_name = MagicMock()
             fake_kaster_outputs.append(fake_output_name)
             all_output_vars.append(fake_output_name)
-
-            forced_returns_dict.update({fake_output_name: MagicMock()})
+            temp_forced_return_list.append(MagicMock())
 
             fake_high_level_knowledge_object = MagicMock()
             mocker.patch.object(fake_high_level_knowledge_object,'update')
 
             fake_high_level_knowledge.update({fake_output_name: fake_high_level_knowledge_object})
-            
-        forced_return_dict_list.append(forced_returns_dict)
+        
+        forced_return_tuple = tuple(temp_forced_return_list)
+        forced_return_tuple_list.append(forced_return_tuple)
 
         fake_kaster = MagicMock()
         fake_kaster.input_vars = fake_kaster_inputs
         fake_kaster.output_vars = fake_kaster_outputs
 
-        mocker.patch.object(fake_kaster,'method',return_value=forced_returns_dict)
+        mocker.patch.object(fake_kaster,'method',return_value=forced_return_tuple)
 
         fake_kasters.append(fake_kaster)
-    print()
         
     cut = Spellbook.__new__(Spellbook)
 
@@ -366,9 +363,9 @@ def test_kast_kaster_specified_high_level_knowledge_is_updated_with_output_of_ka
     for i, kaster in enumerate(fake_kasters):
         assert kaster.method.call_count == 1 # Each kaster method should be called once
         assert kaster.method.call_args_list[0].kwargs == fake_input_dict_list[i] # With an unpacked dict of the input variable values
-        for output_variable in kaster.output_vars:
-            assert cut.high_level_knowledge[output_variable].update.call_count == 1 # Every kaster-output-variable-identified high level knowledge entry update() should be called once 
-            assert cut.high_level_knowledge[output_variable].update.call_args_list[0].args == (forced_return_dict_list[i][output_variable],) # With the value specified in the returned knowledge dictionary
+        for output_variable_index, output_variable_name in enumerate(kaster.output_vars):
+            assert cut.high_level_knowledge[output_variable_name].update.call_count == 1 # Every kaster-output-variable-identified high level knowledge entry update() should be called once 
+            assert cut.high_level_knowledge[output_variable_name].update.call_args_list[0].args == (forced_return_tuple_list[i][output_variable_index],) # With the value in the same position in the returned knowledge 
 
 def test_kast_does_nothing_if_no_kasters_are_present(mocker):
     # Arrange

@@ -45,11 +45,11 @@ You should receive a printout stating that all tests have passed, indicating tha
 ### Run using example data 
 </summary> 
 
-Run the driver file, using:
+Run the driver file with desired arguments to demo functionality of the tool
 ```
-python driver.py
+python driver.py -d # Basic demo, looping through a canned set of data
+python driver.py -l # Interactive demo, allowing the user to input information to demonstrate step-by-step functionality
 ```
-Some data will print to the console, listing the knowledge available at each step, along with a final `RUN COMPLETE` message. This indicates that the tool is running smoothly, and you can begin using it for your own development!
 </details>
 
 ## Integrating KAST with your system
@@ -82,9 +82,9 @@ You'll need a configuration file; refer to `kast/config/manual_pass_config.ini` 
 
 - `KasterMethodsPath` needs to point to a Python file containing all the methods referenced in `KasterDefinitionsPath`. 
 
-    - These functions have a few requirements: they must accept the previously specified input variables as keyword arguments, and more notably **they must return a dictionary**. This dictionary must have the previously specified output variable names as keys, and the values of those variables as values. KAST relies on these output dictionaries to keep track of where to place the results of translation functions. In our `pose_to_posxy` example, our translation function takes 'pose' as a keyword argument, and returns a dictionary of form `{'posx': value1, 'posy': value2}`
+    - These functions have a few requirements: they must accept the previously specified input variables as keyword arguments and more crucially, they must **return the output variables in the same order that they are specified in the definitions file**. KAST relies on this output ordering to keep track of where to place the results of translation functions. In our `pose_to_posxy` example, our translation function takes 'pose' as a keyword argument, and returns a tuple `(posx,posy)`.
 
-- `DataType` denotes the source of data used; for the case of programmatic input, this value is simply `manual`. Internally, this value determines which of the subclasses of DataSource is used in the runtime.
+- `DataType` denotes the source of data used; for the case of programmatic input, this value is simply `live`. Internally, this value determines which of the subclasses of DataSource is used in the runtime.
 
 - `DataFile` is required for other data sources, but not if passing data manually; it can be left as 'none' in your config.
 
@@ -93,9 +93,9 @@ You'll need a configuration file; refer to `kast/config/manual_pass_config.ini` 
 
 ### Integration
 
-Refer to the included `driver.py`, specifically the `manual_override()` function, for a template on integration. Your way to access KAST is through setting up a `KastRuntime`, which you pass a configuration file path to. Initializing a runtime will perform all necessary setup. 
+Refer to the included `driver.py`, specifically the block running when the `live` argument is called, for a template on integration. Your way to access KAST is through setting up a `KastRuntime`, which you pass a configuration file path to. Initializing a runtime will perform all necessary setup. 
 
-When ready, simply call the `KastRuntime.run_step()` method, passing a new packet of data. That packet of data should have the form of a dictionary, where the keys are a subset of the config-specified low level headers with corresponding values. Not all low level headers must be specified on each timestep. Then, `run_step()` will kast your low level input to high level output, and return the runtime's Spellbook object. You can then access both low and high level knowledge dictionaries as Spellbook attributes. Individual knowledge objects can be indexed from the low_level_knowledge or high_level_knowledge attributes by name. The `manual_override()` function in `driver.py` shows an example of accessing these values on each loop. 
+When ready, simply call the `KastRuntime.run_step()` method, passing a new packet of data. That packet of data should have the form of a dictionary, where the keys are a subset of the config-specified low level headers with corresponding values. Not all low level headers must be specified on each timestep. Then, `run_step()` will kast your low level input to high level output, and return the runtime's Spellbook object. You can then access both low and high level knowledge dictionaries as Spellbook attributes. Individual knowledge objects can be indexed from the low_level_knowledge or high_level_knowledge attributes by name.
 
 You can pass the `io` argument to `run_step()` to have KAST print various results of the kasting process to the terminal on each step:
 ```
@@ -127,7 +127,7 @@ We'll use a simple example: I want to translate the input variable 'pose' to two
 
 - `KasterMethodsPath` needs to point to a Python file containing all the methods referenced in `KasterDefinitionsPath`. 
 
-    - These functions have a few requirements: they must accept the previously specified input variables as keyword arguments, and more notably **they must return a dictionary**. This dictionary must have the previously specified output variable names as keys, and the values of those variables as values. KAST relies on these output dictionaries to keep track of where to place the results of translation functions. In our `pose_to_posxy` example, our translation function takes 'pose' as a keyword argument, and returns a dictionary of form `{'posx': value1, 'posy': value2}`
+    - These functions have a few requirements: they must accept the previously specified input variables as keyword arguments and more crucially, they must **return the output variables in the same order that they are specified in the definitions file**. KAST relies on this output ordering to keep track of where to place the results of translation functions. In our `pose_to_posxy` example, our translation function takes 'pose' as a keyword argument, and returns a tuple `(posx,posy)`.
 
 - `DataType` denotes the source of data used; for the case of CSV input, this value is simply `csv`. Internally, this value determines which of the subclasses of DataSource is used in the runtime.
 
@@ -135,7 +135,7 @@ We'll use a simple example: I want to translate the input variable 'pose' to two
 
 ### Integration
 
-Refer to the included `driver.py`, specifically the `main()` function, for a template on integration. Your way to access KAST is through setting up a `KastRuntime`, which you pass a configuration file path to. Initializing a runtime will perform all necessary setup. 
+Refer to the included `driver.py`, specifically the block contingent on the `demo` argument, for a template on integration. Your way to access KAST is through setting up a `KastRuntime`, which you pass a configuration file path to. Initializing a runtime will perform all necessary setup. 
 
 There are two ways you can loop through your data file:  `runtime.run_step()` and `runtime.execute()`. `run_step()` will run a single step of KAST, incrementing the internal data index to the next line. You can loop over the full data by accessing the `runtime.data_source.has_more()` method, returning True when more data is available, and False when the data has been exhausted. In fact, this is exactly what `runtime.execute()` does, but the option to use `run_step()` is available if additional processing is desired per loop. Additionally, when using `run_step()`, you may pass an overriding packet of data to supersede the current row of the data during the loop. That row of data will be lost, however, as the internal index still updates. 
 
@@ -166,7 +166,7 @@ KAST has several high level classes that aid in the running loop which facilitat
 The overarching manager that coordinates communication between all other components. To integrate KAST with your existing software pipelines, as described later on, you'll need an instance of this class and a configuration file. *Ideally, you should not need to interact with any of the other, KAST-internal classes.* In the non-ideal case, refer to the design section of the README or open an issue.
 
 #### DataSource
-Handles the internal data management tasks; importing the data as specified in the config file, and providing fresh data on command to the operating loop. Each unique data source (CSV, Redis, etc) requires a unique DataSource class to handle the data as prescribed by that data type. The next planned feature is to add in a way to pass data manually, so that you can bypass the DataSource class if desired. 
+Handles the internal data management tasks; importing the data as specified in the config file, and providing fresh data on command to the operating loop. Each unique data source (CSV, Redis, etc) requires a unique DataSource class to handle the data as prescribed by that data type. 
 
 #### Spellbook
 Spellbooks contain the core KAST functionality: they store both low- and high-level knowledge and update each one whenever a new packet of data is received. We call this update process *kasting*, and it is governed by Kasters, discussed next.

@@ -8,64 +8,9 @@ import numpy as np
 import pandas as pd
 
 import kast
-from kast.src.runtime.core import *
-from kast.src.spellbook.core import Spellbook
+from kast.src.kast_runtime import *
+from kast.src.spellbook import Spellbook
 
-
-def test_print_spellbook_knowledge_prints_high_level_knowledge_only_when_io_arg_passed_as_high(mocker, capsys):
-    # Arrange
-    fake_data_source = MagicMock()
-    fake_high_level_knowledge_value = MagicMock()
-
-    cut = KastRuntime.__new__(KastRuntime)
-    cut.data_source = fake_data_source
-    cut.spellbook = MagicMock()
-    cut.spellbook.high_level_knowledge = {MagicMock(): fake_high_level_knowledge_value}
-
-    # Act
-    print_spellbook_knowledge(cut,io='high')
-    out, _ = capsys.readouterr()
-
-    # Assert
-    assert str(fake_high_level_knowledge_value) in out
-
-
-def test_print_spellbook_knowledge_prints_low_level_knowledge_only_when_io_arg_passed_as_low(mocker, capsys):
-    # Arrange
-    fake_data_source = MagicMock()
-    fake_low_level_knowledge_value = MagicMock()
-
-    cut = KastRuntime.__new__(KastRuntime)
-    cut.data_source = fake_data_source
-    cut.spellbook = MagicMock()
-    cut.spellbook.low_level_knowledge = {MagicMock(): fake_low_level_knowledge_value}
-
-    # Act
-    print_spellbook_knowledge(cut,io='low')
-    out, _ = capsys.readouterr()
-
-    # Assert
-    assert str(fake_low_level_knowledge_value) in out
-
-def test_print_spellbook_knowledge_prints_both_high_and_low_level_knowledge_only_when_io_arg_passed_as_both(mocker, capsys):
-    # Arrange
-    fake_data_source = MagicMock()
-    fake_low_level_knowledge_value = MagicMock()
-    fake_high_level_knowledge_value = MagicMock()
-
-    cut = KastRuntime.__new__(KastRuntime)
-    cut.data_source = fake_data_source
-    cut.spellbook = MagicMock()
-    cut.spellbook.low_level_knowledge = {MagicMock(): fake_low_level_knowledge_value}
-    cut.spellbook.high_level_knowledge = {MagicMock(): fake_high_level_knowledge_value}
-
-    # Act
-    print_spellbook_knowledge(cut,io='both')
-    out, _ = capsys.readouterr()
-
-    # Assert
-    assert str(fake_high_level_knowledge_value) in out
-    assert str(fake_low_level_knowledge_value) in out
 
 def test_runtime_core__init__sets_internal_filepath_to_given_arg_filepath(mocker):
     # Arrange
@@ -159,7 +104,7 @@ def test_runtime_core__init__generates_attribute_spellbook_with_internal_headers
     mocker.patch.object(cut,'parse_config')
     mocker.patch.object(cut,'import_kaster_methods')
     mocker.patch.object(cut,'initialize_data_source')
-    mocker.patch('kast.src.runtime.core.Spellbook.__init__',return_value=None)
+    mocker.patch('kast.src.kast_runtime.Spellbook.__init__',return_value=None)
 
     # Action
     cut.__init__(arg_filepath)
@@ -298,16 +243,16 @@ def test_runtime_core_import_kaster_sets_self_kaster_definitions_to_list_of_tupl
     mocker.patch('importlib.util.module_from_spec',return_value=fake_module)
     
     mocker.patch.object(fake_spec,'loader.exec_module')
-    mocker.patch('kast.src.runtime.core.get_attribute_by_name',side_effect=fake_callables_list)
+    mocker.patch('kast.src.kast_runtime.get_attribute_by_name',side_effect=fake_callables_list)
 
     # Act
     cut.import_kaster_methods()
 
     # Assert
     assert len(cut.kaster_definitions) == num_fake_kasters
-    assert kast.src.runtime.core.get_attribute_by_name.call_count == num_fake_kasters
+    assert kast.src.kast_runtime.get_attribute_by_name.call_count == num_fake_kasters
     for i in range(num_fake_kasters):
-        assert kast.src.runtime.core.get_attribute_by_name.call_args_list[i].args == (fake_module, fake_method_list[i])
+        assert kast.src.kast_runtime.get_attribute_by_name.call_args_list[i].args == (fake_module, fake_method_list[i])
         assert cut.kaster_definitions[i] == (fake_input_list[i].split(),fake_output_list[i].split(),fake_callables_list[i])
     
 def test_runtime_core_initialize_data_source_imports_datatype_specified_data_source_using_importmodule_then_sets_internal_data_source_to_instance_of_imported_class(mocker):
@@ -319,17 +264,17 @@ def test_runtime_core_initialize_data_source_imports_datatype_specified_data_sou
     cut = KastRuntime.__new__(KastRuntime)
     cut.data_type = fake_data_type
 
-    mocker.patch('kast.src.runtime.core.import_module',return_value=fake_module)
-    mocker.patch('kast.src.runtime.core.get_attribute_by_name',return_value=fake_class_reference)
+    mocker.patch('kast.src.kast_runtime.import_module',return_value=fake_module)
+    mocker.patch('kast.src.kast_runtime.get_attribute_by_name',return_value=fake_class_reference)
     
     # Act
     cut.initialize_data_source()
 
     # Assert
-    assert kast.src.runtime.core.import_module.call_count == 1
-    assert kast.src.runtime.core.import_module.call_args_list[0].kwargs == {'module_name': 'data_source', 'file_to_import': f'kast/utils/data_sources/{cut.data_type}_data_source.py'}
-    assert kast.src.runtime.core.get_attribute_by_name.call_count == 1
-    assert kast.src.runtime.core.get_attribute_by_name.call_args_list[0].args == (fake_module,f'{cut.data_type.upper()}DataSource')
+    assert kast.src.kast_runtime.import_module.call_count == 1
+    assert kast.src.kast_runtime.import_module.call_args_list[0].kwargs == {'module_name': 'data_source', 'file_to_import': f'kast/utils/data_sources/{cut.data_type}_data_source.py'}
+    assert kast.src.kast_runtime.get_attribute_by_name.call_count == 1
+    assert kast.src.kast_runtime.get_attribute_by_name.call_args_list[0].args == (fake_module,f'{cut.data_type.title()}DataSource')
     assert fake_class_reference.call_count == 1
     assert fake_class_reference.call_args_list[0].args == (cut, )
     assert cut.data_source == fake_class_reference()
@@ -408,14 +353,14 @@ def test_runtime_core_runstep_prints_step_number_on_each_loop_and_calls_print_sp
     cut.data_source = fake_data_source
     cut.data_source.index = step_num
 
-    mocker.patch('kast.src.runtime.core.print_spellbook_knowledge')
+    mocker.patch('kast.src.kast_runtime.print_spellbook_knowledge')
 
     # Act
     cut.run_step(io='both')
     out, _ = capsys.readouterr()
 
     # Assert
-    assert kast.src.runtime.core.print_spellbook_knowledge.call_count == 1
+    assert kast.src.kast_runtime.print_spellbook_knowledge.call_count == 1
     assert f"STEP {step_num}" in out
 
 def test_runtime_core_execute_returned_generator_returns_iterable_of_expected_form(mocker):
@@ -460,7 +405,7 @@ def test_runtime_core_execute_prints_end_of_run_message_when_data_source_has_mor
         pass # Required to loop through runtime with generator methodology in runtime.execute
     out, _ = capsys.readouterr()
     assert cut.data_source.has_more.call_count == 1
-    assert 'RUN COMPLETE' in out
+    assert 'KAST COMPLETE' in out
 
 def test_runtime_core_execute_calls_run_step_while_data_source_has_more_is_true(mocker):
     # Arrange

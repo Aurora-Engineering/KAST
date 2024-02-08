@@ -27,4 +27,4 @@ class Knowledge():
         self.value = value
     
     def __str__(self):
-        return f"({self.name}: {self.value} {self._type})"
+        return f"({self.name}: {self.value})"

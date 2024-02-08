@@ -2,14 +2,14 @@ import pytest
 import mock
 from mock import MagicMock
 
-from kast.utils.data_sources.MANUAL_data_source import MANUALDataSource
+from kast.utils.data_sources.live_data_source import LiveDataSource
 
 def test_manual_data_source__init__sets_runtime_to_arg_runtime(mocker):
     # Arrange
     arg_runtime = MagicMock()
     arg_runtime.config = MagicMock()
 
-    cut = MANUALDataSource.__new__(MANUALDataSource)
+    cut = LiveDataSource.__new__(LiveDataSource)
 
     # Action
     cut.__init__(runtime=arg_runtime)
@@ -22,7 +22,7 @@ def test_manual_data_source__init__sets_index_to_zero(mocker):
     arg_runtime = MagicMock()
     arg_runtime.config = MagicMock()
 
-    cut = MANUALDataSource.__new__(MANUALDataSource)
+    cut = LiveDataSource.__new__(LiveDataSource)
 
     # Action
     cut.__init__(runtime=arg_runtime)
@@ -36,7 +36,7 @@ def test_manual_data_source__init__indexes_headers_from_config_low_level_headers
     fake_headers = MagicMock()
     arg_runtime.config = {'DEFAULT': {'LowLevelHeaders': fake_headers}}
 
-    cut = MANUALDataSource.__new__(MANUALDataSource)
+    cut = LiveDataSource.__new__(LiveDataSource)
 
     # Action
     cut.__init__(runtime=arg_runtime)
@@ -50,7 +50,7 @@ def test_manual_data_source_get_new_information_returns_zipped_new_frame_and_inc
     fake_headers = MagicMock()
     arg_frame = MagicMock()
 
-    cut = MANUALDataSource.__new__(MANUALDataSource)
+    cut = LiveDataSource.__new__(LiveDataSource)
     cut.headers = fake_headers
     cut.index = fake_index
 
@@ -63,7 +63,7 @@ def test_manual_data_source_get_new_information_returns_zipped_new_frame_and_inc
 
 def test_manual_data_source_has_more_returns_true(mocker):
     # Arrange
-    cut = MANUALDataSource.__new__(MANUALDataSource)
+    cut = LiveDataSource.__new__(LiveDataSource)
 
 
     # Action
