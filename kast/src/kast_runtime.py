@@ -18,7 +18,7 @@ class KastRuntime():
         self.import_kaster_methods()
         self.initialize_data_source()
 
-        self.spellbook = Spellbook(self.data_source.headers,self.kaster_definitions)
+        self.spellbook = Spellbook(self.headers,self.kaster_definitions)
 
     def parse_config(self) -> None:
         # Set up config and read given file
@@ -27,12 +27,12 @@ class KastRuntime():
 
         # Extract paths from config
         self.kaster_methods_path = self.config['DEFAULT']['KasterMethodsPath'] 
-        self.kaster_definitions_path = self.config['DEFAULT']['KasterDefinitionsPath']
         self.data_file_path = self.config['DEFAULT']['DataFile']
         self.data_type = self.config['DEFAULT']['DataType']
 
     def import_kaster_methods(self):
         self.kaster_definitions = []
+        self.headers = []
     
         # Import given python filepath and create a list of the functions in that file
         module = import_module(module_name='kaster_methods',file_to_import=self.kaster_methods_path)
@@ -42,11 +42,17 @@ class KastRuntime():
         for index, f in enumerate(func_list):
             f_name = f[0]
             f_callable = f[1]
+            
+            input_variables = getfullargspec(f_callable).args
+            output_variables = extract_return_names(f_name, self.kaster_methods_path)
+
             self.kaster_definitions.append((
-                getfullargspec(f_callable).args,
-                extract_return_names(f_name, self.kaster_methods_path),
+                input_variables,
+                output_variables,
                 func_list[index][1]
             ))
+            for var in input_variables:
+                self.headers.append(var)
     
     def initialize_data_source(self):
         module = import_module(module_name='data_source',file_to_import=f'kast/utils/data_sources/{self.data_type}_data_source.py')

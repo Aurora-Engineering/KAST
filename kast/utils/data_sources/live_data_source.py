@@ -7,7 +7,7 @@ from kast.utils.data_sources.core import DataSource
 class LiveDataSource(DataSource):
     def __init__(self,runtime: KastRuntime):
         self.runtime = runtime
-        self.headers = self.runtime.config['DEFAULT']['LowLevelHeaders'].split(",")
+        self.headers = self.runtime.headers
         self.index = 0
 
     def get_new_information(self,new_frame):
