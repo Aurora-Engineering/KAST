@@ -1,8 +1,8 @@
 import csv
 import numpy as np
 
-from kast.src.kast_runtime import KastRuntime
-from kast.utils.data_sources.core import DataSource
+from KAST.kast.src.kast_runtime import KastRuntime
+from KAST.kast.utils.data_sources.core import DataSource
 
 class LiveDataSource(DataSource):
     def __init__(self,runtime: KastRuntime):

@@ -4,10 +4,10 @@ import os
 from typing import List,Tuple, Callable
 from inspect import getmembers, isfunction, getfullargspec
 
-from kast.src.spellbook import Spellbook
-from kast.utils.data_sources.core import DataSource
-from kast.utils.functions import get_attribute_by_name, import_module, extract_return_names
-from kast.utils.print_io import *
+from KAST.kast.src.spellbook import Spellbook
+from KAST.kast.utils.data_sources.core import DataSource
+from KAST.kast.utils.functions import get_attribute_by_name, import_module, extract_return_names
+from KAST.kast.utils.print_io import *
 
 class KastRuntime():
     def __init__(self, config_filepath: str):
@@ -55,7 +55,7 @@ class KastRuntime():
                 self.headers.append(var)
     
     def initialize_data_source(self):
-        module = import_module(module_name='data_source',file_to_import=f'kast/utils/data_sources/{self.data_type}_data_source.py')
+        module = import_module(module_name='data_source',file_to_import=f'KAST/kast/utils/data_sources/{self.data_type}_data_source.py')
         class_reference = get_attribute_by_name(module,f'{self.data_type.title()}DataSource')
         self.data_source = class_reference(self)
 
