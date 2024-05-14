@@ -2,35 +2,27 @@ import re
 import numpy as np
 import json
 
-from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 from std_msgs.msg import Bool
 
-def tb_pose_to_position(tb_pose: PoseStamped):
+def starling_msg_to_bool(starling_sample_collected: Bool):
+    # Extract data from Starling-published message
     try:
-        x = tb_pose.pose.position.x
-        y = tb_pose.pose.position.y
-        z = tb_pose.pose.position.z
+        drone_sampled = starling_sample_collected.data
     except AttributeError:
-        x, y, z = (-999, -999, -999)
-    tb_position = [x, y, z]
-    return (tb_position, )
+        print(f'Null message received for Starling msg; returning ridiculous value')
+        drone_sampled = False
 
-def tb_event_to_bool(tb_event: Bool):
+    return (drone_sampled, )
+
+def tb_odometry_to_position(odom: Odometry):
+    # Extract position data from odom message
+    print(odom)
     try:
-        tb_event_bool = tb_event.data
+        position = odom.pose.pose.position
+        tb_position = np.array([position.x, position.y])
     except AttributeError:
-        tb_event_bool = False
+        print(f'Null message received for odom; returning ridiculous value')
+        tb_position = [-999, -999]
 
-    return (tb_event_bool, )
-
-def redis_mavlink_to_drone_position(mavlink_tlm_position_velocity_ned):
-    transform_mask = np.array([1, 1, -1]) # Change NED to XYZ
-
-    msg = json.loads(mavlink_tlm_position_velocity_ned['data'].decode())
-    position_dict = msg['position_velocity_ned']['position']
-
-    ned_coords =  (position_dict['north_m'], position_dict['east_m'], position_dict['down_m'])
-    drone_position = np.multiply(transform_mask, np.array(ned_coords))
-
-    return (drone_position, )
-	
+    return(tb_position, )
