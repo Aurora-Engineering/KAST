@@ -2,14 +2,15 @@ import re
 import numpy as np
 import json
 
-from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 from std_msgs.msg import Bool
 
-def tb_pose_to_position(tb_pose: PoseStamped):
+def tb_pose_to_position(odom: Odometry):
     try:
-        x = tb_pose.pose.position.x
-        y = tb_pose.pose.position.y
-        z = tb_pose.pose.position.z
+        pos = odom.pose.pose.position
+        x = pos.x
+        y = pos.y
+        z = pos.z
     except AttributeError:
         x, y, z = (-999, -999, -999)
     tb_position = [x, y, z]
