@@ -1,11 +1,10 @@
 import configparser
 import pandas as pd
 import os
-from typing import List,Tuple, Callable
+from inspect import getmembers, isfunction, getfullargspec
 
 from kast.src.spellbook import Spellbook
-from kast.utils.data_sources.core import DataSource
-from kast.utils.functions import get_attribute_by_name, import_module
+from kast.utils.functions import get_attribute_by_name, import_module, extract_return_names
 from kast.utils.print_io import *
 
 class KastRuntime():
@@ -17,7 +16,7 @@ class KastRuntime():
         self.import_kaster_methods()
         self.initialize_data_source()
 
-        self.spellbook = Spellbook(self.data_source.headers,self.kaster_definitions)
+        self.spellbook = Spellbook(self.headers,self.kaster_definitions)
 
     def parse_config(self) -> None:
         # Set up config and read given file
@@ -26,26 +25,36 @@ class KastRuntime():
 
         # Extract paths from config
         self.kaster_methods_path = self.config['DEFAULT']['KasterMethodsPath'] 
-        self.kaster_definitions_path = self.config['DEFAULT']['KasterDefinitionsPath']
         self.data_file_path = self.config['DEFAULT']['DataFile']
         self.data_type = self.config['DEFAULT']['DataType']
 
     def import_kaster_methods(self):
         self.kaster_definitions = []
+        self.headers = []
 
-        # Initialize definitions and split string representations of lists into lists of strings
-        kaster_df: pd.DataFrame = pd.read_csv(self.kaster_definitions_path)
-        kaster_string_tuples = [(inp.split(","), out.split(","), method) for inp, out, method in zip(kaster_df['input'], kaster_df['output'],kaster_df['method'])]
-        # How do we test the above line?
-        
-        # Import given python filepath
+        # Import given python filepath and create a list of the functions in that file
         module = import_module(module_name='kaster_methods',file_to_import=self.kaster_methods_path)
+        func_list = getmembers(module, isfunction)
 
-        # For each kaster in given definitions, extract the specified function/method by the string name and create definitions including the callable
-        for kaster_tuple in kaster_string_tuples:
-            kaster_method = get_attribute_by_name(module,kaster_tuple[2])
-            self.kaster_definitions.append((kaster_tuple[0],kaster_tuple[1],kaster_method))
-    
+        # For each of those functions, create a Kaster definition of form ([input_variables], [output_variables], callable_kaster_method)
+        sum = 0
+        for f in func_list:
+            f_name = f[0]
+            f_callable = f[1]
+
+            input_variables = getfullargspec(f_callable).args
+            # print(f'input vars are {len(input_variables)}')
+            output_variables = extract_return_names(f_name, self.kaster_methods_path)
+
+            self.kaster_definitions.append((
+                input_variables,
+                output_variables,
+                f[1]
+            ))
+            for var in input_variables:
+                self.headers.append(var)
+            sum = sum + len(input_variables)
+
     def initialize_data_source(self):
         module = import_module(module_name='data_source',file_to_import=f'kast/utils/data_sources/{self.data_type}_data_source.py')
         class_reference = get_attribute_by_name(module,f'{self.data_type.title()}DataSource')

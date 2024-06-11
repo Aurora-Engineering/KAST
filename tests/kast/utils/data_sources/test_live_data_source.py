@@ -4,7 +4,7 @@ from mock import MagicMock
 
 from kast.utils.data_sources.live_data_source import LiveDataSource
 
-def test_manual_data_source__init__sets_runtime_to_arg_runtime(mocker):
+def test_live_data_source__init__sets_runtime_to_arg_runtime(mocker):
     # Arrange
     arg_runtime = MagicMock()
     arg_runtime.config = MagicMock()
@@ -17,7 +17,7 @@ def test_manual_data_source__init__sets_runtime_to_arg_runtime(mocker):
     # Assert
     assert cut.runtime == arg_runtime
 
-def test_manual_data_source__init__sets_index_to_zero(mocker):
+def test_live_data_source__init__sets_index_to_zero(mocker):
     # Arrange
     arg_runtime = MagicMock()
     arg_runtime.config = MagicMock()
@@ -30,11 +30,13 @@ def test_manual_data_source__init__sets_index_to_zero(mocker):
     # Assert
     assert cut.index == 0
         
-def test_manual_data_source__init__indexes_headers_from_config_low_level_headers_by_splitting(mocker):
+def test_live_data_source__init__sets_headers_from_runtime(mocker):
+    ### FIX ###
     # Arrange
     arg_runtime = MagicMock()
     fake_headers = MagicMock()
-    arg_runtime.config = {'DEFAULT': {'LowLevelHeaders': fake_headers}}
+
+    arg_runtime.headers = fake_headers
 
     cut = LiveDataSource.__new__(LiveDataSource)
 
@@ -42,9 +44,9 @@ def test_manual_data_source__init__indexes_headers_from_config_low_level_headers
     cut.__init__(runtime=arg_runtime)
 
     # Assert
-    assert cut.headers == fake_headers.split(",")
+    assert cut.headers == fake_headers
         
-def test_manual_data_source_get_new_information_returns_zipped_new_frame_and_increments_index(mocker):
+def test_live_data_source_get_new_information_returns_zipped_new_frame_and_increments_index(mocker):
     # Arrange
     fake_index = pytest.gen.randint(1,10)
     fake_headers = MagicMock()
@@ -61,10 +63,9 @@ def test_manual_data_source_get_new_information_returns_zipped_new_frame_and_inc
     assert ret == dict(zip(fake_headers, arg_frame))
     assert cut.index == fake_index + 1
 
-def test_manual_data_source_has_more_returns_true(mocker):
+def test_live_data_source_has_more_returns_true(mocker):
     # Arrange
     cut = LiveDataSource.__new__(LiveDataSource)
-
 
     # Action
     ret = cut.has_more()

@@ -31,7 +31,7 @@ def main():
 				print_kast_ender()
 				break
 			else:
-				yielded_spellbook = runtime.run_step({'pose': pose_input,'pose1':'[2,2,2]','pose2':'[3,3,3]'},io='both')
+				yielded_spellbook = runtime.run_step({'pose': pose_input,'rpy': '[1, 1, 1]'},io='both')
 				# Access new values on each step through the yielded spellbook
 				# For example, to extract the value of the high level Knowledge object 'posx'
 				# posx = yielded_spellbook.high_level_knowledge['posx'].value

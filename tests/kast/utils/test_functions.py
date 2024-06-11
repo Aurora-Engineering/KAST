@@ -1,9 +1,12 @@
 import pytest
-from mock import MagicMock
+from mock import MagicMock, PropertyMock
 import importlib.util
 import os
 
-from kast.utils.functions import import_module, get_attribute_by_name
+import kast.utils
+from kast.utils.functions import import_module, get_attribute_by_name, extract_return_names
+import kast
+import kast.utils.functions
 
 def test_import_module_throws_an_assertion_error_if_given_filepath_does_not_exist(mocker):
     # Arrange
@@ -76,3 +79,132 @@ def test_get_attribute_by_name_calls_getattr(mocker):
 
     # Assert
     assert fake_getattr.call_count == 1
+
+
+# test_extract_return_names...
+def test_extract_return_names_calls_return_file_nodes_using_given_filepath(mocker):
+    # Arrange
+    fake_filepath = MagicMock()
+    fake_function_name = MagicMock()
+
+    mocker.patch('kast.utils.functions.return_file_nodes')
+
+    # Act
+    extract_return_names(fake_function_name, fake_filepath)
+
+    # Assert
+    assert kast.utils.functions.return_file_nodes.call_count == 1
+    assert kast.utils.functions.return_file_nodes.call_args_list[0].args == (fake_filepath, )
+
+def test_extract_return_names_skips_entries_that_are_not_function_definitions(mocker):
+    # Arrange
+    fake_filepath = MagicMock()
+    fake_function_name = MagicMock()
+    fake_name_attr = PropertyMock()
+
+
+    fake_file_node = MagicMock(spec=1)
+    type(fake_file_node).name = fake_name_attr
+
+    mocker.patch('kast.utils.functions.return_file_nodes', return_value=[fake_file_node])
+    mocker.patch.object(fake_file_node, 'name')
+
+    # Act
+    cut = extract_return_names(fake_function_name, fake_filepath)
+
+    # Assert
+    assert fake_file_node.name.call_count == 0
+    assert cut == None
+
+def test_extract_return_names_skips_entries_that_are_function_defs_but_do_not_match_the_given_function_name(mocker):
+    # Arrange
+    from ast import FunctionDef
+    fake_filepath = MagicMock()
+    fake_function_name = MagicMock()
+    fake_name_attr = PropertyMock()
+    fake_body_attr = PropertyMock()
+
+    fake_file_node = MagicMock(spec=FunctionDef())
+    type(fake_file_node).name = fake_name_attr
+    type(fake_file_node).body = fake_body_attr
+
+    mocker.patch('kast.utils.functions.return_file_nodes', return_value=[fake_file_node])
+
+    # Act
+    cut = extract_return_names(fake_function_name, fake_filepath)
+
+    # Assert
+    assert fake_name_attr.call_count == 1
+    assert fake_body_attr.call_count == 0
+    assert cut == None
+
+def test_extract_return_names_calls_check_body_node_on_body_entries_with_return_from_body_attr(mocker):
+    # Arrange
+    from ast import FunctionDef
+    fake_filepath = MagicMock()
+    fake_function_name = MagicMock()
+    fake_body_node = MagicMock()
+
+    fake_name_attr = PropertyMock(return_value=fake_function_name)
+    fake_body_attr = PropertyMock(return_value=[fake_body_node])
+
+    fake_file_node = MagicMock(spec=FunctionDef())
+    type(fake_file_node).name = fake_name_attr
+    type(fake_file_node).body = fake_body_attr
+
+    mocker.patch('kast.utils.functions.return_file_nodes', return_value=[fake_file_node])
+    mocker.patch('kast.utils.functions.check_body_node', return_value=None)
+
+    # Act
+    cut = extract_return_names(fake_function_name, fake_filepath)
+
+    # Assert
+    assert kast.utils.functions.check_body_node.call_count == 1
+    assert kast.utils.functions.check_body_node.call_args_list[0].args == (fake_body_node, )
+
+def test_extract_return_names_returns_None_if_check_body_node_returns_None(mocker):
+    # Arrange
+    from ast import FunctionDef
+    fake_filepath = MagicMock()
+    fake_function_name = MagicMock()
+    fake_body_node = MagicMock()
+
+    fake_name_attr = PropertyMock(return_value=fake_function_name)
+    fake_body_attr = PropertyMock(return_value=[fake_body_node])
+
+    fake_file_node = MagicMock(spec=FunctionDef())
+    type(fake_file_node).name = fake_name_attr
+    type(fake_file_node).body = fake_body_attr
+
+    mocker.patch('kast.utils.functions.return_file_nodes', return_value=[fake_file_node])
+    mocker.patch('kast.utils.functions.check_body_node', return_value=None)
+
+    # Act
+    cut = extract_return_names(fake_function_name, fake_filepath)
+
+    # Assert
+    assert cut == None
+
+def test_extract_return_names_returns_value_from_check_body_node_returns_if_check_body_node_returns_not_None(mocker):
+    # Arrange
+    from ast import FunctionDef
+    fake_filepath = MagicMock()
+    fake_function_name = MagicMock()
+    fake_body_node = MagicMock()
+    fake_overall_return = MagicMock()
+
+    fake_name_attr = PropertyMock(return_value=fake_function_name)
+    fake_body_attr = PropertyMock(return_value=[fake_body_node])
+
+    fake_file_node = MagicMock(spec=FunctionDef())
+    type(fake_file_node).name = fake_name_attr
+    type(fake_file_node).body = fake_body_attr
+
+    mocker.patch('kast.utils.functions.return_file_nodes', return_value=[fake_file_node])
+    mocker.patch('kast.utils.functions.check_body_node', return_value=fake_overall_return)
+
+    # Act
+    cut = extract_return_names(fake_function_name, fake_filepath)
+
+    # Assert
+    assert cut == fake_overall_return

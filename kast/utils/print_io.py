@@ -39,9 +39,9 @@ def print_kast_header():
     print("*************************************************" + bcolors.ENDC)
 
 def print_kast_ender():
-    print(bcolors.HEADER + bcolors.BOLD+ "\n**********************************************")
-    print("************    KAST COMPLETE     ************")
-    print("**********************************************" + bcolors.ENDC)
+    print(bcolors.HEADER + bcolors.BOLD+ "\n*************************************************")
+    print("***************     COMPLETE     ****************")
+    print("*************************************************" + bcolors.ENDC)
 
 # Print when a new step is starting
 def print_data_source_step(step_num):

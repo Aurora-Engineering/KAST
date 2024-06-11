@@ -1,5 +1,6 @@
 import importlib.util
 import os
+import ast
 
 def import_module(module_name: str, file_to_import: str):
     """
@@ -24,6 +25,43 @@ def import_module(module_name: str, file_to_import: str):
     spec.loader.exec_module(module)
     return module
 
-def get_attribute_by_name(object, name):
-    return getattr(object,name) # This just exists to shield this method for testing
+def extract_return_names(f_name, file):
+    """
+    Given a file and function name, extract the names of the variables returned from that function.
+    Used in KAST to generate Kaster output variable names (which are then used to initialize high level knowledge)
+    Parameters
+    ----------
+    f_name : str
+        String name of the function to be analyzed
+    file : str
+        File from which to import function
+    Returns
+    -------
+    output_variables : List[str]
+        List of string names of the variables returned by the function
+    """
+                                                                             
+    for x in return_file_nodes(file):
+        print('looped')     
+        if not(isinstance(x, ast.FunctionDef)):
+            print('checked class instance')                                                             
+            continue                                                                                        
+        if not(x.name == f_name): 
+            continue 
+        for b in x.body:         
+            output_vars = check_body_node(b)  
+            if output_vars != None:
+                return output_vars                                                                         
 
+# Decorators: these get wrapped to prevent having to test them. Trying to mock calls that pytest uses (ast and getattr fall under this category) causes testing issues.
+def get_attribute_by_name(object, name):
+    return getattr(object,name) 
+
+def return_file_nodes(file): 
+        return(ast.walk(ast.parse(open(file).read())))
+
+def check_body_node(node):
+    if isinstance(node, ast.Return):  
+        if isinstance(node.value, ast.Tuple):
+            output_variables = [var.id for var in node.value.elts]
+            return output_variables
