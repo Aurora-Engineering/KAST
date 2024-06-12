@@ -1,6 +1,6 @@
 # KAST: Knowledge Acquisition and Synthesis Tool
 
-The purpose of this tool is to streamline the sub-symbolic to symbolic knowledge synthesis process, often needed by artificial intelligence reasoning systems. It allows for the large scale automated translation of sub-symbolic data to higher levels of representation while still being lightweight and easy to use. 
+The purpose of this tool is to streamline the sub-symbolic to symbolic knowledge synthesis process, often needed by artificial intelligence reasoning systems. It allows for the large scale automated translation of sub-symbolic data (voltages, currents, motor angles, etc.) to higher levels of representation (representing knowledge of the environment) while still being lightweight and easy to use. 
 
 ## Quick Start
 This section will guide you through the installation and first test run of KAST.
@@ -67,28 +67,21 @@ First, decide how the data is getting into KAST. Currently, there are two main w
 ### Programmatic Input
 </summary> 
 
-The most streamlined version of KAST would be to import it into another file, and run using a packet of values passed explicitly. This still requires some configuration on your part, however.
+The most streamlined version of KAST would be to import it into another script, and run using a packet of values passed explicitly. This still requires some configuration on your part, however.
 
 ### Config Setup
-You'll need a configuration file; refer to `kast/config/manual_pass_config.ini` as a template for building your own file. Let's look at each of the fields required.
+You'll need a configuration file; refer to `kast/config/exmaple_config.ini` as a template for building your own file. Let's look at each of the fields required.
 
-- `KasterDefinitionsPath` needs to point to a file describing the methods used to perform the data translation, as well as the inputs and outputs of those methods. In usable terms, that means a CSV with three columns. 
- 
-    - "input": a comma separated list of the names of input variables 
-    - "output": a comma separated list of the names of output variables 
-    - "method": the name of the Python function used to perform the translation 
+- `KasterMethodsPath` needs to point to a Python file containing all the functions to be called during the run. 
 
-- We'll use a simple example: I want to translate the input variable 'pose' to two higher-level output representations, 'posx' and 'posy', and I have a function called 'pose_to_posxy' that performs that translation. A file corresponding to this example can be found at `kast/user_inputs/example/example_kaster_definitions.csv`.
+    - These functions are used to generate the information used to translate from low- to high-level data, stored in a format we call Kasters. Each Kaster contains information about a specific translation, taking a set of low-level input variables, calling a Python function with those inputs as kwargs, and returning another set of high-level output variables. x
+    - These functions are used to automatically generate Kaster objects by reading inputs, outputs, and function names. To avoid overwriting output, use unique names for output variables. All functions must return a tuple of output variables, even if only a single entry.
+    - An example definitions file is included at `user_inputs/example_kaster_methods.py`. In this simple illustrative case, `pose` and `rpy` are taken as input variables, processed using function `pose_and_rpy_to_posexy`, and three outputs are returned: `(posx, posy, rpy_x)`.
 
-- `KasterMethodsPath` needs to point to a Python file containing all the methods referenced in `KasterDefinitionsPath`. 
-
-    - These functions have a few requirements: they must accept the previously specified input variables as keyword arguments and more crucially, they must **return the output variables in the same order that they are specified in the definitions file**. KAST relies on this output ordering to keep track of where to place the results of translation functions. In our `pose_to_posxy` example, our translation function takes 'pose' as a keyword argument, and returns a tuple `(posx,posy)`.
 
 - `DataType` denotes the source of data used; for the case of programmatic input, this value is simply `live`. Internally, this value determines which of the subclasses of DataSource is used in the runtime.
 
 - `DataFile` is required for other data sources, but not if passing data manually; it can be left as 'none' in your config.
-
-- `LowLevelHeaders` should be a comma separated list of the headers you plan to pass to the program. Data should be passed into KAST in the same order as the headers are listed in this field. For our example, say that we are passing the `pose` parameter for three drones. Therefore our headers are "pose,pose1,pose2", as listed in the example config. These are used to initialize the internal low-level-knowledge and check compatibility with the specified Kasters.
 
 
 ### Integration
@@ -117,21 +110,15 @@ You can also import data from a CSV, using the same methodology as with the prog
 ### Config Setup
 You'll need a configuration file; refer to `kast/config/example_config.ini` as a template for building your own file. Let's look at each of the fields required.
 
-- `KasterDefinitionsPath` needs to point to a file describing the methods used to perform the data translation, as well as the inputs and outputs of those methods. In usable terms, that means a CSV with three columns. 
- 
-    - "input": a comma separated list of the names of input variables 
-    - "output": a comma separated list of the names of output variables 
-    - "method": the name of the Python function used to perform the translation 
+- `KasterMethodsPath` needs to point to a Python file containing all the functions to be called during the run. 
 
-We'll use a simple example: I want to translate the input variable 'pose' to two higher-level output representations, 'posx' and 'posy', and I have a function called 'pose_to_posxy' that performs that translation. A file corresponding to this example can be found at `kast/user_inputs/example/example_kaster_definitions.csv`.
-
-- `KasterMethodsPath` needs to point to a Python file containing all the methods referenced in `KasterDefinitionsPath`. 
-
-    - These functions have a few requirements: they must accept the previously specified input variables as keyword arguments and more crucially, they must **return the output variables in the same order that they are specified in the definitions file**. KAST relies on this output ordering to keep track of where to place the results of translation functions. In our `pose_to_posxy` example, our translation function takes 'pose' as a keyword argument, and returns a tuple `(posx,posy)`.
+    - These functions are used to generate the information used to translate from low- to high-level data, stored in a format we call Kasters. Each Kaster contains information about a specific translation, taking a set of low-level input variables, calling a Python function with those inputs as kwargs, and returning another set of high-level output variables. x
+    - These functions are used to automatically generate Kaster objects by reading inputs, outputs, and function names. To avoid overwriting output, use unique names for output variables. All functions must return a tuple of output variables, even if only a single entry.
+    - An example definitions file is included at `user_inputs/example_kaster_methods.py`. In this simple illustrative case, `pose` and `rpy` are taken as input variables, processed using function `pose_and_rpy_to_posexy`, and three outputs are returned: `(posx, posy, rpy_x)`.
 
 - `DataType` denotes the source of data used; for the case of CSV input, this value is simply `csv`. Internally, this value determines which of the subclasses of DataSource is used in the runtime.
 
-- `DataFile` should point to your CSV source file. In terms of formatting, note that KAST will take the first row of the CSV to be header labels, and initialize the low level knowledge base according to this row.
+- `DataFile` should point to your CSV source file. In terms of formatting, note that KAST will take the first row of the CSV to be header labels, so make sure all your input variables from the Kaster methods are represented in your CSV's first row. 
 
 ### Integration
 
