@@ -1,3 +1,12 @@
+# GSC-19360-1, "Knowledge Acquisition and Synthesis Tool"
+#
+# Copyright © 2024 United States Government as represented by the 
+# Administrator of the National Aeronautics and Space Administration.   
+# All Rights Reserved.
+#
+# Licensed under the NASA Open Source Agreement version 1.3
+# See "NOSA GSC-19360-1 KAST.pdf"
+
 import pytest
 import mock
 from mock import MagicMock

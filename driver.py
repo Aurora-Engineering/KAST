@@ -1,4 +1,12 @@
-# Knowledge Aquisition and Synthesis Tool
+# GSC-19360-1, "Knowledge Acquisition and Synthesis Tool"
+#
+# Copyright © 2024 United States Government as represented by the 
+# Administrator of the National Aeronautics and Space Administration.   
+# All Rights Reserved.
+#
+# Licensed under the NASA Open Source Agreement version 1.3
+# See "NOSA GSC-19360-1 KAST.pdf"
+
 from kast.src.kast_runtime import KastRuntime
 from kast.utils.print_io import *
 import argparse

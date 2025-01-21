@@ -2,6 +2,10 @@
 
 The purpose of this tool is to streamline the sub-symbolic to symbolic knowledge synthesis process, often needed by artificial intelligence reasoning systems. It allows for the large scale automated translation of sub-symbolic data (voltages, currents, motor angles, etc.) to higher levels of representation (representing knowledge of the environment) while still being lightweight and easy to use. 
 
+## License and Copyright
+
+KAST is licensed under the NASA Open Source Agreement (NOSA) version 1.3. Please refer to [NOSA GSC-19360-1 KAST.pdf](NOSA%20GSC-19360-1%20KAST), [COPYRIGHT](COPYRIGHT) and [DISCLAIMER](DISCLAIMER).
+
 ## Quick Start
 This section will guide you through the installation and first test run of KAST.
 <details><summary> 

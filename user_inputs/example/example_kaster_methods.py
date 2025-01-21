@@ -1,3 +1,12 @@
+# GSC-19360-1, "Knowledge Acquisition and Synthesis Tool"
+#
+# Copyright © 2024 United States Government as represented by the 
+# Administrator of the National Aeronautics and Space Administration.   
+# All Rights Reserved.
+#
+# Licensed under the NASA Open Source Agreement version 1.3
+# See "NOSA GSC-19360-1 KAST.pdf"
+
 def pose_and_rpy_to_posxy(pose, rpy):
 
 	def strlist_to_list(strlist: str):
